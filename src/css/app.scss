@@ -1,0 +1,75 @@
+// ── Global App Styles ──────────────────────────────────────────────
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  background: #050d1a;
+  color: #ffffff;
+  font-family: 'Outfit', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ── Quasar Overrides — make all containers transparent so the
+//    global canvas particle background (in MainLayout) shows through
+.q-layout {
+  background: transparent !important;
+}
+.q-page-container {
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+}
+.q-page {
+  background: transparent !important;
+}
+// Keep a dark base layer only on the very bottom (html/body)
+// so if the canvas ever doesn't load there's still a dark bg
+
+
+// ── Scrollbar ─────────────────────────────────────────────────────
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.45);
+}
+
+// ── Selection ─────────────────────────────────────────────────────
+::selection {
+  background: rgba(0, 212, 255, 0.25);
+  color: white;
+}
+
+// ── Utility Classes ───────────────────────────────────────────────
+.text-gradient {
+  background: linear-gradient(135deg, #00d4ff, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// ── Link Reset ────────────────────────────────────────────────────
+a {
+  color: inherit;
+}
+
+// ── Input Reset ───────────────────────────────────────────────────
+button {
+  font-family: inherit;
+}
+
+input, textarea {
+  font-family: inherit;
+}
