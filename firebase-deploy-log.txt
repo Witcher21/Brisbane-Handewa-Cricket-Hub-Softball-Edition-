@@ -1,4 +1,4 @@
-﻿node.exe : (node:25632) 
+﻿node.exe : (node:30772) 
 [DEP0040] 
 DeprecationWarning: The 
 `punycode` module is 
@@ -14,8 +14,8 @@ lib/bin/fireb ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~
     + CategoryInfo           
-   : NotSpecified: ((node:2  
-  5632) [D...native instea   
+   : NotSpecified: ((node:3  
+  0772) [D...native instea   
  d.:String) [], RemoteExc    
 eption
     + FullyQualifiedErrorId  
@@ -28,14 +28,21 @@ created)
 
 [1m[37m===[39m Deploying to 'brisbane-handewa-cricket-hub'...[22m
 
-[36m[1mi [22m[39m deploying [1mfunctions[22m
-[36m[1mi  functions:[22m[39m preparing codebase [1mcricket-api[22m for deployment
-[36m[1mi  functions:[22m[39m ensuring required API [1mcloudfunctions.googleapis.com[22m is enabled...
-[36m[1mi  functions:[22m[39m ensuring required API [1mcloudbuild.googleapis.com[22m is enabled...
-[36m[1mi  artifactregistry:[22m[39m ensuring required API [1martifactregistry.googleapis.com[22m is enabled...
-[33m[1m!  functions:[22m[39m missing required API [1mcloudbuild.googleapis.com[22m. Enabling now...
-[33m[1m!  artifactregistry:[22m[39m missing required API [1martifactregistry.googleapis.com[22m. Enabling now...
+[36m[1mi [22m[39m deploying [1mhosting[22m
+[36m[1mi  hosting[brisbane-handewa-cricket-hub]:[22m[39m beginning deploy...
+[36m[1mi  hosting[brisbane-handewa-cricket-hub]:[22m[39m found 65 files in [1mdist/pwa[22m
+[32m[1m+  hosting[brisbane-handewa-cricket-hub]:[22m[39m file upload complete
+[36m[1mi  hosting[brisbane-handewa-cricket-hub]:[22m[39m finalizing version...
+[33m[1m!  hosting[brisbane-handewa-cricket-hub]:[22m[39m Unable to find a valid endpoint for function `get_matches`, but still including it in the config
+[33m[1m!  hosting[brisbane-handewa-cricket-hub]:[22m[39m Unable to find a valid endpoint for function `get_players`, but still including it in the config
+[33m[1m!  hosting[brisbane-handewa-cricket-hub]:[22m[39m Unable to find a valid endpoint for function `get_teams`, but still including it in the config
+[33m[1m!  hosting[brisbane-handewa-cricket-hub]:[22m[39m Unable to find a valid endpoint for function `register_delivery`, but still including it in the config
+[33m[1m!  hosting[brisbane-handewa-cricket-hub]:[22m[39m Unable to find a valid endpoint for function `health`, but still including it in the config
+[32m[1m+  hosting[brisbane-handewa-cricket-hub]:[22m[39m version finalized
+[36m[1mi  hosting[brisbane-handewa-cricket-hub]:[22m[39m releasing new version...
+[32m[1m+  hosting[brisbane-handewa-cricket-hub]:[22m[39m release complete
 
-[1m[31mError:[39m[22m Your project [1mbrisbane-handewa-cricket-hub[22m must be on the Blaze (pay-as-you-go) plan to complete this command. Required API [1mcloudbuild.googleapis.com[22m can't be enabled until the upgrade is complete. To upgrade, visit the following URL:
+[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
 
-https://console.firebase.google.com/project/brisbane-handewa-cricket-hub/usage/details
+[1mProject Console:[22m https://console.firebase.google.com/project/brisbane-handewa-cricket-hub/overview
+[1mHosting URL:[22m https://brisbane-handewa-cricket-hub.web.app

@@ -15,10 +15,15 @@
 import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 
-// ── Create custom Axios instance pointing at FastAPI backend ──────
+// ── Smart API base: production → Render, dev → localhost ──────────
+const API_BASE =
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://brisbane-handewa-cricket-api.onrender.com'
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
-  timeout: 10000,
+  baseURL: API_BASE,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

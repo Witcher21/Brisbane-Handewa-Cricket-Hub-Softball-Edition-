@@ -19,7 +19,12 @@ export const useLiveStore = defineStore('live', () => {
     // If already connected, do nothing
     if (socket.value && socket.value.readyState === WebSocket.OPEN) return
 
-    const wsUrl = `ws://localhost:8000/ws/live/${matchId}`
+    // Smart WS URL: production → Render (wss), dev → localhost (ws)
+    const wsBase =
+      window.location.hostname === 'localhost'
+        ? `ws://localhost:8000`
+        : `wss://brisbane-handewa-cricket-api.onrender.com`
+    const wsUrl = `${wsBase}/ws/live/${matchId}`
     console.log(`🔌 Connecting to Live Server: ${wsUrl}`)
 
     socket.value = new WebSocket(wsUrl)
