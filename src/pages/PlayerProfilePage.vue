@@ -4,15 +4,19 @@
       <!-- BACK -->
       <router-link to="/players" class="back-btn">← Back to Players</router-link>
 
-      <!-- HERO -->
+      <!-- ═══ HERO ════════════════════════════════════════════════════════ -->
       <div class="profile-hero">
         <div class="hero-av" :style="{ background: roleGrad(player.role) }">
           <span class="av-em">{{ roleEm(player.role) }}</span>
           <div class="av-num">#{{ player.number }}</div>
         </div>
         <div class="hero-info">
-          <div class="profile-role-badge" :class="`r-${safeRole(player.role)}`">{{ player.role }}</div>
-          <h1 class="profile-name">{{ player.name }} <span class="nick">"{{ player.nickname }}"</span></h1>
+          <div class="profile-role-badge" :class="`r-${safeRole(player.role)}`">
+            {{ player.role }}
+          </div>
+          <h1 class="profile-name">
+            {{ player.name }} <span class="nick">"{{ player.nickname }}"</span>
+          </h1>
           <div class="profile-meta-row">
             <span>🏏 {{ player.battingStyle }}</span>
             <span>⚾ {{ player.bowlingStyle }}</span>
@@ -30,119 +34,348 @@
         </div>
       </div>
 
-      <!-- CAREER KEY STATS -->
+      <!-- ═══ CRICBUZZ-STYLE CAREER OVERVIEW TABS ════════════════════════ -->
       <div class="stats-section">
         <h2 class="sec-title">📊 Career Overview</h2>
-        <div class="key-stats-grid">
-          <div class="ks-card">
-            <div class="ks-val">{{ player.stats.matches }}</div>
-            <div class="ks-lbl">Matches</div>
+
+        <!-- Tab selector -->
+        <div class="career-tabs">
+          <button
+            v-for="tab in careerTabs"
+            :key="tab.v"
+            class="ct-btn"
+            :class="{ 'ct-active': careerTab === tab.v }"
+            @click="careerTab = tab.v"
+          >
+            {{ tab.icon }} {{ tab.l }}
+          </button>
+        </div>
+
+        <!-- ── BATTING STATS TAB ────────────────────────────── -->
+        <div v-show="careerTab === 'bat'" class="cricbuzz-card">
+          <div class="cbz-header">
+            <div class="cbz-team-badge" :style="{ background: playerTeam?.color || '#00d4ff' }">
+              {{ playerTeam?.shortName || 'N/A' }}
+            </div>
+            <div class="cbz-player-name">{{ player.name }}</div>
+            <div class="cbz-role-tag" :class="`r-${safeRole(player.role)}`">{{ player.role }}</div>
           </div>
-          <div class="ks-card" v-if="isBatter">
-            <div class="ks-val cyan">{{ player.stats.runs }}</div>
-            <div class="ks-lbl">Runs</div>
+
+          <!-- Cricbuzz-style stats table -->
+          <div class="cbz-table-wrap">
+            <table class="cbz-table">
+              <thead>
+                <tr>
+                  <th>Mat</th>
+                  <th>Inn</th>
+                  <th>NO</th>
+                  <th class="cbz-highlight">Runs</th>
+                  <th>HS</th>
+                  <th class="cbz-highlight">Avg</th>
+                  <th>BF</th>
+                  <th class="cbz-highlight">SR</th>
+                  <th>100s</th>
+                  <th>50s</th>
+                  <th>4s</th>
+                  <th>6s</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ s.matches }}</td>
+                  <td>{{ s.innings }}</td>
+                  <td>{{ s.notOuts }}</td>
+                  <td class="cbz-highlight cbz-big">{{ s.runs }}</td>
+                  <td class="cbz-gold">{{ s.highScore }}</td>
+                  <td class="cbz-highlight cbz-big">{{ avg }}</td>
+                  <td>{{ s.balls }}</td>
+                  <td class="cbz-highlight">{{ sr }}</td>
+                  <td class="cbz-green">{{ s.hundreds }}</td>
+                  <td class="cbz-green">{{ s.fifties }}</td>
+                  <td>{{ s.fours }}</td>
+                  <td class="cbz-purple">{{ s.sixes }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="ks-card" v-if="isBatter">
-            <div class="ks-val cyan">{{ avg }}</div>
-            <div class="ks-lbl">Average</div>
+
+          <!-- Visual highlight bars -->
+          <div class="cbz-bars">
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Runs</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-cyan"
+                  :style="{ width: `${Math.min((s.runs / 2000) * 100, 100)}%` }"
+                />
+              </div>
+              <span class="cbz-bar-val cyan">{{ s.runs }}</span>
+            </div>
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Avg</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-blue"
+                  :style="{ width: `${Math.min((parseFloat(avg) / 80) * 100, 100)}%` }"
+                />
+              </div>
+              <span class="cbz-bar-val">{{ avg }}</span>
+            </div>
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Strike Rate</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-purple"
+                  :style="{ width: `${Math.min(parseFloat(sr), 100)}%` }"
+                />
+              </div>
+              <span class="cbz-bar-val purple">{{ sr }}</span>
+            </div>
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">High Score</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-gold"
+                  :style="{ width: `${Math.min((s.highScore / 200) * 100, 100)}%` }"
+                />
+              </div>
+              <span class="cbz-bar-val gold">{{ s.highScore }}</span>
+            </div>
           </div>
-          <div class="ks-card" v-if="isBatter">
-            <div class="ks-val">{{ sr }}</div>
-            <div class="ks-lbl">Strike Rate</div>
+
+          <!-- Milestone badges -->
+          <div class="cbz-milestones">
+            <div class="cbz-milestone" v-if="s.hundreds > 0">
+              <span class="cm-num gold">{{ s.hundreds }}</span>
+              <span class="cm-lbl">Centuries</span>
+            </div>
+            <div class="cbz-milestone">
+              <span class="cm-num green">{{ s.fifties }}</span>
+              <span class="cm-lbl">Half Centuries</span>
+            </div>
+            <div class="cbz-milestone">
+              <span class="cm-num red">{{ s.sixes }}</span>
+              <span class="cm-lbl">Sixes Hit</span>
+            </div>
+            <div class="cbz-milestone">
+              <span class="cm-num">{{ s.fours }}</span>
+              <span class="cm-lbl">Fours Hit</span>
+            </div>
           </div>
-          <div class="ks-card" v-if="isBatter">
-            <div class="ks-val gold">{{ player.stats.highScore }}</div>
-            <div class="ks-lbl">High Score</div>
+        </div>
+
+        <!-- ── BOWLING STATS TAB ────────────────────────────── -->
+        <div v-show="careerTab === 'bowl'" class="cricbuzz-card">
+          <div class="cbz-header">
+            <div class="cbz-team-badge" :style="{ background: playerTeam?.color || '#ff3d57' }">
+              {{ playerTeam?.shortName || 'N/A' }}
+            </div>
+            <div class="cbz-player-name">{{ player.name }}</div>
+            <div class="cbz-role-tag" :class="`r-${safeRole(player.role)}`">{{ player.role }}</div>
           </div>
-          <div class="ks-card" v-if="isBowler">
-            <div class="ks-val red">{{ player.stats.wickets }}</div>
-            <div class="ks-lbl">Wickets</div>
+
+          <div class="cbz-table-wrap">
+            <table class="cbz-table">
+              <thead>
+                <tr>
+                  <th>Mat</th>
+                  <th>Inn</th>
+                  <th>Ovs</th>
+                  <th>Mdns</th>
+                  <th>Runs</th>
+                  <th class="cbz-highlight">Wkts</th>
+                  <th class="cbz-highlight">Avg</th>
+                  <th class="cbz-highlight">Eco</th>
+                  <th>SR</th>
+                  <th>BBI</th>
+                  <th>5W</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ s.matches }}</td>
+                  <td>{{ s.innings }}</td>
+                  <td>{{ s.oversBowled }}</td>
+                  <td>{{ s.maidens }}</td>
+                  <td>{{ s.runsConceded }}</td>
+                  <td class="cbz-highlight cbz-big red">{{ s.wickets }}</td>
+                  <td class="cbz-highlight cbz-big">{{ bowlAvg }}</td>
+                  <td class="cbz-highlight cbz-big green">{{ economy }}</td>
+                  <td>{{ bowlingSR }}</td>
+                  <td class="cbz-purple">{{ s.bestFigures }}</td>
+                  <td>{{ s.fiveWickets || 0 }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="ks-card" v-if="isBowler">
-            <div class="ks-val">{{ economy }}</div>
-            <div class="ks-lbl">Economy</div>
+
+          <!-- Visual bars -->
+          <div class="cbz-bars">
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Wickets</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-red"
+                  :style="{ width: `${Math.min((s.wickets / 100) * 100, 100)}%` }"
+                />
+              </div>
+              <span class="cbz-bar-val red">{{ s.wickets }}</span>
+            </div>
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Economy</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-green"
+                  :style="{
+                    width: `${Math.max(0, Math.min(((12 - parseFloat(economy)) / 12) * 100, 100))}%`,
+                  }"
+                />
+              </div>
+              <span class="cbz-bar-val green">{{ economy }}</span>
+            </div>
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Bowling Avg</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-blue"
+                  :style="{
+                    width: `${Math.max(0, Math.min(((50 - parseFloat(bowlAvg)) / 50) * 100, 100))}%`,
+                  }"
+                />
+              </div>
+              <span class="cbz-bar-val">{{ bowlAvg }}</span>
+            </div>
+            <div class="cbz-bar-item">
+              <span class="cbz-bar-lbl">Overs Bowled</span>
+              <div class="cbz-bar-track">
+                <div
+                  class="cbz-bar-fill cbz-bar-purple"
+                  :style="{ width: `${Math.min((s.oversBowled / 200) * 100, 100)}%` }"
+                />
+              </div>
+              <span class="cbz-bar-val purple">{{ s.oversBowled }}</span>
+            </div>
           </div>
-          <div class="ks-card" v-if="isBowler">
-            <div class="ks-val">{{ bowlAvg }}</div>
-            <div class="ks-lbl">Bowl Avg</div>
+
+          <!-- Bowling milestones -->
+          <div class="cbz-milestones">
+            <div class="cbz-milestone">
+              <span class="cm-num red">{{ s.wickets }}</span>
+              <span class="cm-lbl">Total Wickets</span>
+            </div>
+            <div class="cbz-milestone">
+              <span class="cm-num purple">{{ s.bestFigures }}</span>
+              <span class="cm-lbl">Best Figures</span>
+            </div>
+            <div class="cbz-milestone">
+              <span class="cm-num">{{ s.maidens }}</span>
+              <span class="cm-lbl">Maiden Overs</span>
+            </div>
+            <div class="cbz-milestone">
+              <span class="cm-num cyan">{{ s.oversBowled }}</span>
+              <span class="cm-lbl">Overs Bowled</span>
+            </div>
           </div>
-          <div class="ks-card" v-if="isBowler && player.stats.bestFigures !== '0/0'">
-            <div class="ks-val purple">{{ player.stats.bestFigures }}</div>
-            <div class="ks-lbl">Best Figures</div>
-          </div>
-          <div class="ks-card">
-            <div class="ks-val green">{{ player.stats.catches }}</div>
-            <div class="ks-lbl">Catches</div>
-          </div>
-          <div class="ks-card" v-if="player.role === 'Wicket-keeper' && player.stats.stumpings">
-            <div class="ks-val green">{{ player.stats.stumpings }}</div>
-            <div class="ks-lbl">Stumpings</div>
+        </div>
+
+        <!-- ── FIELDING / OVERVIEW TAB ─────────────────────── -->
+        <div v-show="careerTab === 'field'" class="cricbuzz-card">
+          <!-- Summary grid for ALL roles -->
+          <div class="overview-grid">
+            <div class="ovg-item">
+              <span class="ovg-val">{{ s.matches }}</span>
+              <span class="ovg-lbl">Matches</span>
+            </div>
+            <div class="ovg-item cyan">
+              <span class="ovg-val cyan">{{ s.runs }}</span>
+              <span class="ovg-lbl">Runs scored</span>
+            </div>
+            <div class="ovg-item red">
+              <span class="ovg-val red">{{ s.wickets }}</span>
+              <span class="ovg-lbl">Wickets taken</span>
+            </div>
+            <div class="ovg-item gold">
+              <span class="ovg-val gold">{{ s.highScore }}</span>
+              <span class="ovg-lbl">Best Score</span>
+            </div>
+            <div class="ovg-item green">
+              <span class="ovg-val green">{{ s.catches }}</span>
+              <span class="ovg-lbl">Catches</span>
+            </div>
+            <div class="ovg-item green" v-if="player.role === 'Wicket-keeper'">
+              <span class="ovg-val green">{{ s.stumpings }}</span>
+              <span class="ovg-lbl">Stumpings</span>
+            </div>
+            <div class="ovg-item">
+              <span class="ovg-val">{{ s.runOuts || 0 }}</span>
+              <span class="ovg-lbl">Run Outs</span>
+            </div>
+            <div class="ovg-item purple">
+              <span class="ovg-val purple">{{ s.sixes }}</span>
+              <span class="ovg-lbl">Sixes hit</span>
+            </div>
+            <div class="ovg-item">
+              <span class="ovg-val">{{ s.fours }}</span>
+              <span class="ovg-lbl">Fours hit</span>
+            </div>
+            <div class="ovg-item">
+              <span class="ovg-val">{{ s.fifties }}</span>
+              <span class="ovg-lbl">Fifties</span>
+            </div>
+            <div class="ovg-item gold">
+              <span class="ovg-val gold">{{ s.hundreds }}</span>
+              <span class="ovg-lbl">Centuries</span>
+            </div>
+            <div class="ovg-item">
+              <span class="ovg-val">{{ s.bestFigures }}</span>
+              <span class="ovg-lbl">Best bowling</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="profile-cols">
-        <!-- BATTING BREAKDOWN -->
-        <div v-if="isBatter" class="breakdown-card">
-          <h3 class="bc-title">🏏 Batting Breakdown</h3>
-          <div class="bd-table">
-            <div class="bd-row" v-for="row in battingRows" :key="row.l">
-              <span class="bd-lbl">{{ row.l }}</span>
-              <div v-if="row.bar" class="bd-bar-wrap">
-                <div class="bd-bar" :style="{ width: `${row.pct}%`, background: row.color }" />
-              </div>
-              <span class="bd-val" :style="{ color: row.color || 'white' }">{{ row.v }}</span>
+      <!-- ═══ CURRENT MATCH PERFORMANCE ══════════════════════════════════ -->
+      <div class="stats-section" v-if="currentMatchEntry">
+        <h2 class="sec-title">📡 Current Match Performance</h2>
+        <div class="live-perf-card">
+          <div class="lpc-left">
+            <div class="lpc-score">
+              <span class="lpc-runs">{{ currentMatchEntry.runs }}</span>
+              <span class="lpc-balls">({{ currentMatchEntry.balls }})</span>
+            </div>
+            <div class="lpc-detail">
+              {{ currentMatchEntry.fours }}×4 · {{ currentMatchEntry.sixes }}×6 · SR
+              {{
+                currentMatchEntry.balls > 0
+                  ? ((currentMatchEntry.runs / currentMatchEntry.balls) * 100).toFixed(1)
+                  : '0.0'
+              }}
+            </div>
+            <div class="lpc-status" :class="`st-${currentMatchEntry.status}`">
+              {{
+                currentMatchEntry.status === 'batting'
+                  ? '🏏 Currently Batting'
+                  : currentMatchEntry.status === 'out'
+                    ? '❌ ' + currentMatchEntry.dismissal
+                    : '⏳ Yet to bat'
+              }}
             </div>
           </div>
-        </div>
-
-        <!-- BOWLING BREAKDOWN -->
-        <div v-if="isBowler" class="breakdown-card">
-          <h3 class="bc-title">⚾ Bowling Breakdown</h3>
-          <div class="bd-table">
-            <div class="bd-row" v-for="row in bowlingRows" :key="row.l">
-              <span class="bd-lbl">{{ row.l }}</span>
-              <div v-if="row.bar" class="bd-bar-wrap">
-                <div class="bd-bar" :style="{ width: `${row.pct}%`, background: row.color }" />
-              </div>
-              <span class="bd-val" :style="{ color: row.color || 'white' }">{{ row.v }}</span>
+          <div class="lpc-right" v-if="currentBowlingEntry">
+            <div class="lpc-bowl-title">🎯 Bowling this match</div>
+            <div class="lpc-bowl-fig">
+              {{ currentBowlingEntry.overs }}-{{ currentBowlingEntry.maidens }}-{{
+                currentBowlingEntry.runs
+              }}-{{ currentBowlingEntry.wickets }}
             </div>
-          </div>
-        </div>
-
-        <!-- MATCH PERFORMANCE (auto-saved live stats) -->
-        <div class="breakdown-card">
-          <h3 class="bc-title">📡 Current Match Performance</h3>
-          <div v-if="currentMatchEntry">
-            <div class="live-perf-card">
-              <div class="lpc-score">
-                <span class="lpc-runs">{{ currentMatchEntry.runs }}</span>
-                <span class="lpc-balls">({{ currentMatchEntry.balls }})</span>
-              </div>
-              <div class="lpc-detail">
-                {{ currentMatchEntry.fours }}×4 · {{ currentMatchEntry.sixes }}×6 ·
-                SR {{ currentMatchEntry.balls > 0 ? ((currentMatchEntry.runs / currentMatchEntry.balls) * 100).toFixed(1) : '0.0' }}
-              </div>
-              <div class="lpc-status" :class="`st-${currentMatchEntry.status}`">
-                {{ currentMatchEntry.status === 'batting' ? '🏏 Currently Batting' : currentMatchEntry.status === 'out' ? '❌ ' + currentMatchEntry.dismissal : '⏳ Yet to bat' }}
-              </div>
-            </div>
-          </div>
-          <div v-else class="no-perf">No active match data for this player.</div>
-
-          <!-- Fielding stats -->
-          <div class="field-stats">
-            <h4 class="field-title">🧤 Fielding Career</h4>
-            <div class="field-row">
-              <div class="field-item"><span>{{ player.stats.catches }}</span> Catches</div>
-              <div v-if="player.stats.stumpings" class="field-item"><span>{{ player.stats.stumpings }}</span> Stumpings</div>
-              <div v-if="player.stats.runOuts" class="field-item"><span>{{ player.stats.runOuts }}</span> Run Outs</div>
+            <div class="lpc-bowl-eco">
+              Eco: {{ liveEconomy || calcEco(currentBowlingEntry.runs, currentBowlingEntry.overs) }}
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── RECENT MATCHES ──────────────────────────────────── -->
+      <!-- ═══ RECENT MATCHES ══════════════════════════════════════════════ -->
       <div class="stats-section" v-if="recentMatches.length">
         <h2 class="sec-title">🗓️ Recent Match Performances</h2>
         <div class="recent-matches-list">
@@ -156,16 +389,21 @@
             <div class="rm-stats">
               <div class="rm-bat" v-if="rm.batting && rm.batting.status !== 'yet'">
                 <span class="rm-stat-lbl">BAT</span>
-                <span class="rm-runs" :class="{ 'rm-milestone': rm.batting.runs >= 50 }">{{ rm.batting.runs }}</span>
+                <span class="rm-runs" :class="{ 'rm-milestone': rm.batting.runs >= 50 }">{{
+                  rm.batting.runs
+                }}</span>
                 <span class="rm-balls">({{ rm.batting.balls }})</span>
                 <span class="rm-extras">{{ rm.batting.fours }}×4 · {{ rm.batting.sixes }}×6</span>
-                <span class="rm-dismissal" v-if="rm.batting.status === 'out'">{{ rm.batting.dismissal }}</span>
+                <span class="rm-dismissal" v-if="rm.batting.status === 'out'">{{
+                  rm.batting.dismissal
+                }}</span>
                 <span class="rm-notout" v-else>not out</span>
               </div>
-              <div class="rm-bowl" v-if="rm.bowling && rm.bowling.wickets > 0">
+              <div class="rm-bowl" v-if="rm.bowling && rm.bowling.overs > 0">
                 <span class="rm-stat-lbl">BOWL</span>
                 <span class="rm-wkts">{{ rm.bowling.wickets }}/{{ rm.bowling.runs }}</span>
                 <span class="rm-overs">({{ rm.bowling.overs }} ov)</span>
+                <span class="rm-eco">Eco: {{ calcEco(rm.bowling.runs, rm.bowling.overs) }}</span>
               </div>
             </div>
           </div>
@@ -175,7 +413,7 @@
 
     <!-- NOT FOUND -->
     <div v-else class="not-found">
-      <div style="font-size:80px">🏏</div>
+      <div style="font-size: 80px">🏏</div>
       <h2>Player Not Found</h2>
       <router-link to="/players" class="back-btn">← Back to Players</router-link>
     </div>
@@ -183,63 +421,58 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCricketStore } from 'stores/cricket-store'
 
-const route  = useRoute()
-const store  = useCricketStore()
+const route = useRoute()
+const store = useCricketStore()
 const player = computed(() => store.getPlayerById(route.params.id))
-const playerTeam = computed(() => player.value ? store.getTeamById(player.value.teamId) : null)
+const playerTeam = computed(() => (player.value ? store.getTeamById(player.value.teamId) : null))
+// ✅ s is fully reactive — updates live on every ball via Pinia
+const s = computed(() => player.value?.stats || {})
 
-const isBatter = computed(() => player.value && player.value.role !== 'Bowler')
-const isBowler = computed(() => player.value && (player.value.role === 'Bowler' || player.value.role === 'All-rounder'))
+// Career tab — show all stats, default to overview
+const careerTab = ref('field')
+const careerTabs = [
+  { v: 'field', l: 'Overview', icon: '🏅' },
+  { v: 'bat', l: 'Batting', icon: '🏏' },
+  { v: 'bowl', l: 'Bowling', icon: '⚾' },
+]
 
-const avg      = computed(() => store.playerBattingAvg(player.value?.stats || {}))
-const sr       = computed(() => store.playerBattingSR(player.value?.stats || {}))
-const economy  = computed(() => store.playerBowlEconomy(player.value?.stats || {}))
-const bowlAvg  = computed(() => store.playerBowlAvg(player.value?.stats || {}))
+// Computed career stats (all reactive, update ball-by-ball)
+const avg = computed(() => store.playerBattingAvg(s.value))
+const sr = computed(() => store.playerBattingSR(s.value))
+const economy = computed(() => s.value?.economy || store.playerBowlEconomy(s.value))
+const bowlAvg = computed(() => store.playerBowlAvg(s.value))
+const bowlingSR = computed(() => {
+  const balls = s.value?.ballsBowled || 0
+  const wkts = s.value?.wickets || 0
+  return wkts > 0 ? (balls / wkts).toFixed(1) : '-'
+})
 
-// Current match entry for this player
+// ✅ Live match batting performance — reads from liveMatch.battingOrder (real-time)
 const currentMatchEntry = computed(() => {
   const lm = store.liveMatch
   if (!lm || !player.value) return null
   return lm.battingOrder.find((b) => b.playerId === player.value.id) || null
 })
 
-const battingRows = computed(() => {
-  if (!player.value) return []
-  const s = player.value.stats
-  const maxRuns = 3000
-  return [
-    { l: 'Innings',     v: s.innings,  bar: false },
-    { l: 'Runs',        v: s.runs,     bar: true,  pct: Math.min((s.runs / maxRuns) * 100, 100),  color: '#00d4ff' },
-    { l: 'Average',     v: avg.value,  bar: false, color: '#00d4ff' },
-    { l: 'Strike Rate', v: sr.value,   bar: true,  pct: Math.min(parseFloat(sr.value), 100), color: '#a855f7' },
-    { l: 'High Score',  v: s.highScore,bar: true,  pct: Math.min((s.highScore / 150) * 100, 100), color: '#ffd700' },
-    { l: 'Fifties',     v: s.fifties,  bar: false, color: '#22c55e' },
-    { l: 'Hundreds',    v: s.hundreds, bar: false, color: '#22c55e' },
-    { l: 'Fours',       v: s.fours,    bar: false },
-    { l: 'Sixes',       v: s.sixes,    bar: false, color: '#ff3d57' },
-    { l: 'Not Outs',    v: s.notOuts,  bar: false },
-  ]
+// ✅ Live match bowling performance — reads from liveMatch.bowlingCard (real-time)
+const currentBowlingEntry = computed(() => {
+  const lm = store.liveMatch
+  if (!lm || !player.value) return null
+  return lm.bowlingCard.find((b) => b.playerId === player.value.id) || null
 })
 
-const bowlingRows = computed(() => {
-  if (!player.value) return []
-  const s = player.value.stats
-  return [
-    { l: 'Overs Bowled', v: s.oversBowled,   bar: false },
-    { l: 'Wickets',      v: s.wickets,        bar: true, pct: Math.min((s.wickets / 80) * 100, 100), color: '#ff3d57' },
-    { l: 'Runs Conceded',v: s.runsConceded,   bar: false },
-    { l: 'Economy',      v: economy.value,    bar: true, pct: Math.min(((12 - parseFloat(economy.value)) / 12) * 100, 100), color: '#22c55e' },
-    { l: 'Bowl Average', v: bowlAvg.value,    bar: false, color: '#00d4ff' },
-    { l: 'Maidens',      v: s.maidens,        bar: false },
-    { l: 'Best Figures', v: s.bestFigures,    bar: false, color: '#a855f7' },
-  ]
+// Live economy from current spell
+const liveEconomy = computed(() => {
+  const be = currentBowlingEntry.value
+  if (!be) return null
+  return be.economy || (be.legalBalls > 0 ? ((be.runs / be.legalBalls) * 6).toFixed(2) : '0.00')
 })
 
-// Recent matches for this player (from completed matches)
+// Recent matches
 const recentMatches = computed(() => {
   if (!player.value) return []
   const pid = player.value.id
@@ -248,13 +481,20 @@ const recentMatches = computed(() => {
     ...store.matches.filter((m) => m.status === 'completed'),
     ...(store.matchHistory || []),
   ]
-  // Deduplicate by id
   const seen = new Set()
   allMatches.forEach((m) => {
     if (seen.has(m.id)) return
     seen.add(m.id)
-    const batting = m.battingOrder?.find((b) => b.playerId === pid)
-    const bowling = m.bowlingCard?.find((b) => b.playerId === pid)
+    // Check both innings batting orders
+    const batting =
+      m.battingOrderA?.find((b) => b.playerId === pid) ||
+      m.battingOrderB?.find((b) => b.playerId === pid) ||
+      m.battingOrder?.find((b) => b.playerId === pid)
+    // Check both innings bowling cards
+    const bowling =
+      m.bowlingCardInn1?.find((b) => b.playerId === pid) ||
+      m.bowlingCardInn2?.find((b) => b.playerId === pid) ||
+      m.bowlingCard?.find((b) => b.playerId === pid)
     if (!batting && !bowling) return
     const isTeamA = m.teamAId === player.value?.teamId
     const opponentId = isTeamA ? m.teamBId : m.teamAId
@@ -275,17 +515,32 @@ const recentMatches = computed(() => {
   return results.reverse().slice(0, 10)
 })
 
-function formatDate(d) {
-  try { return new Date(d).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) }
-  catch { return d || '' }
+function calcEco(r, o) {
+  return o > 0 ? (r / o).toFixed(2) : '0.00'
 }
-
+function formatDate(d) {
+  try {
+    return new Date(d).toLocaleDateString('en-AU', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  } catch {
+    return d || ''
+  }
+}
 function safeRole(r) {
   return (r || '').toLowerCase().replace(/[^a-z]/g, '')
 }
-
 function roleGrad(r) {
-  return { Batsman: '#00d4ff15', Bowler: '#ff3d5715', 'All-rounder': '#a855f715', 'Wicket-keeper': '#22c55e15' }[r] || '#ffffff10'
+  return (
+    {
+      Batsman: '#00d4ff15',
+      Bowler: '#ff3d5715',
+      'All-rounder': '#a855f715',
+      'Wicket-keeper': '#22c55e15',
+    }[r] || '#ffffff10'
+  )
 }
 function roleEm(r) {
   return { Batsman: '🏏', Bowler: '⚾', 'All-rounder': '⚡', 'Wicket-keeper': '🧤' }[r] || '🏏'
@@ -293,103 +548,633 @@ function roleEm(r) {
 </script>
 
 <style scoped>
-.dark-page { background:transparent;min-height:100vh; }
-.profile-wrap { max-width:1000px;margin:0 auto;padding:36px 32px 80px; }
-.back-btn { display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.4);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:28px;transition:color 0.2s; }
-.back-btn:hover { color:#00d4ff; }
+.dark-page {
+  background: transparent;
+  min-height: 100vh;
+}
+.profile-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 36px 32px 80px;
+}
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 28px;
+  transition: color 0.2s;
+}
+.back-btn:hover {
+  color: #00d4ff;
+}
 
-/* HERO */
-.profile-hero { display:flex;align-items:flex-start;gap:32px;margin-bottom:44px;flex-wrap:wrap; }
-.hero-av { width:120px;height:120px;flex-shrink:0;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:50px;border:2px solid rgba(255,255,255,0.1);position:relative; }
-.av-em { line-height:1; }
-.av-num { position:absolute;bottom:-10px;right:-10px;background:#030b18;border:1.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:11px;font-weight:900;padding:2px 8px;border-radius:7px; }
-.hero-info { flex:1;min-width:200px; }
-.profile-role-badge { display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 11px;border-radius:6px;margin-bottom:10px;text-transform:uppercase; }
-.r-batsman      { background:rgba(0,212,255,0.12);color:#00d4ff; }
-.r-bowler       { background:rgba(255,61,87,0.12);color:#ff3d57; }
-.r-allrounder   { background:rgba(168,85,247,0.12);color:#a855f7; }
-.r-wicketkeeper { background:rgba(34,197,94,0.12);color:#22c55e; }
-.profile-name { font-size:clamp(24px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-1px;margin:0 0 10px;line-height:1.1; }
-.nick { font-size:16px;color:rgba(255,255,255,0.35);font-weight:400; }
-.profile-meta-row { display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px; }
-.profile-meta-row span { font-size:13px;color:rgba(255,255,255,0.45);font-weight:600; }
-.profile-desc { font-size:14px;color:rgba(255,255,255,0.45);line-height:1.7;margin:0 0 14px;max-width:550px; }
-.achievements-row { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px; }
-.ach-chip { padding:5px 12px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);border-radius:20px;font-size:11px;color:#ffd700;font-weight:600; }
-.team-line { font-size:13px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:8px; }
-.team-line strong { color:#fff; }
-.team-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+/* ══ HERO ════════════════════════════════════════════ */
+.profile-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  margin-bottom: 44px;
+  flex-wrap: wrap;
+}
+.hero-av {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+.av-num {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  background: #030b18;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 7px;
+}
+.hero-info {
+  flex: 1;
+  min-width: 200px;
+}
+.profile-role-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 11px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.r-batsman {
+  background: rgba(0, 212, 255, 0.12);
+  color: #00d4ff;
+}
+.r-bowler {
+  background: rgba(255, 61, 87, 0.12);
+  color: #ff3d57;
+}
+.r-allrounder {
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+}
+.r-wicketkeeper {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+.profile-name {
+  font-size: clamp(22px, 4vw, 38px);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1px;
+  margin: 0 0 10px;
+  line-height: 1.1;
+}
+.nick {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+.profile-meta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.profile-meta-row span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+.profile-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.7;
+  margin: 0 0 14px;
+  max-width: 550px;
+}
+.achievements-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ach-chip {
+  padding: 5px 12px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 20px;
+  font-size: 11px;
+  color: #ffd700;
+  font-weight: 600;
+}
+.team-line {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.team-line strong {
+  color: #fff;
+}
+.team-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
-/* STATS SECTION */
-.stats-section { margin-bottom:36px; }
-.sec-title { font-size:18px;font-weight:800;color:#fff;margin:0 0 20px; }
-.key-stats-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px; }
-.ks-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px 16px;text-align:center;transition:all 0.2s; }
-.ks-card:hover { border-color:rgba(0,212,255,0.15);transform:translateY(-2px); }
-.ks-val { font-size:28px;font-weight:900;color:#fff;line-height:1;margin-bottom:6px;font-family:'Outfit','Roboto',sans-serif; }
-.ks-val.cyan   { color:#00d4ff; }
-.ks-val.gold   { color:#ffd700; }
-.ks-val.red    { color:#ff3d57; }
-.ks-val.purple { color:#a855f7; }
-.ks-val.green  { color:#22c55e; }
-.ks-lbl { font-size:10px;color:rgba(255,255,255,0.3);font-weight:700;letter-spacing:1.5px;text-transform:uppercase; }
+/* ══ CAREER SECTION ══════════════════════════════════ */
+.stats-section {
+  margin-bottom: 36px;
+}
+.sec-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 18px;
+}
 
-/* PROFILE COLS */
-.profile-cols { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px; }
-.breakdown-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:22px; }
-.bc-title { font-size:15px;font-weight:800;color:#fff;margin:0 0 18px; }
+/* Career tabs */
+.career-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.ct-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.ct-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.ct-active {
+  background: rgba(0, 212, 255, 0.1) !important;
+  border-color: rgba(0, 212, 255, 0.3) !important;
+  color: #00d4ff !important;
+}
 
-/* Breakdown Table */
-.bd-table { display:flex;flex-direction:column;gap:10px; }
-.bd-row { display:flex;align-items:center;gap:10px; }
-.bd-lbl { font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;width:105px;flex-shrink:0; }
-.bd-bar-wrap { flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden; }
-.bd-bar { height:100%;border-radius:3px;transition:width 0.8s ease; }
-.bd-val { font-size:14px;font-weight:800;color:#fff;text-align:right;min-width:48px; }
+/* Cricbuzz-style card */
+.cricbuzz-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* Header row */
+.cbz-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.cbz-team-badge {
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+}
+.cbz-player-name {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+.cbz-role-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+/* Cricbuzz table */
+.cbz-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+.cbz-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 540px;
+}
+.cbz-table thead tr {
+  background: rgba(255, 255, 255, 0.04);
+}
+.cbz-table th {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+.cbz-table td {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 14px 12px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.cbz-highlight {
+  background: rgba(0, 212, 255, 0.04) !important;
+}
+.cbz-big {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  color: #fff !important;
+}
+.cbz-gold {
+  color: #ffd700 !important;
+}
+.cbz-green {
+  color: #22c55e !important;
+}
+.cbz-purple {
+  color: #a855f7 !important;
+}
+.red {
+  color: #ff3d57 !important;
+}
+.green {
+  color: #22c55e !important;
+}
+.cyan {
+  color: #00d4ff !important;
+}
+.gold {
+  color: #ffd700 !important;
+}
+.purple {
+  color: #a855f7 !important;
+}
+
+/* Bar chart rows */
+.cbz-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.cbz-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cbz-bar-lbl {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  width: 100px;
+  flex-shrink: 0;
+}
+.cbz-bar-track {
+  flex: 1;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.cbz-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cbz-bar-val {
+  font-size: 14px;
+  font-weight: 800;
+  min-width: 56px;
+  text-align: right;
+}
+.cbz-bar-cyan {
+  background: linear-gradient(90deg, #00d4ff, #0088cc);
+}
+.cbz-bar-blue {
+  background: linear-gradient(90deg, #4488ff, #0044bb);
+}
+.cbz-bar-purple {
+  background: linear-gradient(90deg, #a855f7, #7722cc);
+}
+.cbz-bar-gold {
+  background: linear-gradient(90deg, #ffd700, #cc9900);
+}
+.cbz-bar-red {
+  background: linear-gradient(90deg, #ff3d57, #cc1133);
+}
+.cbz-bar-green {
+  background: linear-gradient(90deg, #22c55e, #118833);
+}
+
+/* Milestone badges */
+.cbz-milestones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cbz-milestone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 14px 20px;
+  flex: 1;
+  min-width: 90px;
+}
+.cm-num {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+.cm-lbl {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* Overview grid */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.ovg-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 18px 12px;
+  transition: all 0.2s;
+  text-align: center;
+}
+.ovg-item:hover {
+  border-color: rgba(0, 212, 255, 0.15);
+  transform: translateY(-2px);
+}
+.ovg-val {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+.ovg-lbl {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
 
 /* Live Perf */
-.live-perf-card { background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.15);border-radius:12px;padding:16px;margin-bottom:18px; }
-.lpc-score { display:flex;align-items:baseline;gap:6px;margin-bottom:4px; }
-.lpc-runs { font-size:42px;font-weight:900;color:#00d4ff;line-height:1; }
-.lpc-balls { font-size:20px;color:rgba(255,255,255,0.35); }
-.lpc-detail { font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:8px; }
-.lpc-status { font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;width:fit-content; }
-.st-batting { background:rgba(0,212,255,0.1);color:#00d4ff; }
-.st-out     { background:rgba(255,61,87,0.08);color:#ff3d57; }
-.st-yet     { background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4); }
-.no-perf { font-size:13px;color:rgba(255,255,255,0.25);font-style:italic;padding:12px 0;margin-bottom:18px; }
-
-/* Fielding */
-.field-title { font-size:13px;font-weight:800;color:#fff;margin:0 0 12px; }
-.field-row { display:flex;gap:14px;flex-wrap:wrap; }
-.field-item { display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;padding:10px 16px; }
-.field-item span { font-size:22px;font-weight:900;color:#22c55e; }
-.field-item { font-size:11px;color:rgba(255,255,255,0.4); }
-
-/* Not Found */
-.not-found { text-align:center;padding:120px 20px; }
-.not-found h2 { font-size:28px;font-weight:800;color:rgba(255,255,255,0.5);margin:16px 0 24px; }
+.live-perf-card {
+  background: rgba(0, 212, 255, 0.04);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.lpc-left {
+  flex: 1;
+}
+.lpc-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.lpc-runs {
+  font-size: 52px;
+  font-weight: 900;
+  color: #00d4ff;
+  line-height: 1;
+}
+.lpc-balls {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.3);
+}
+.lpc-detail {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+}
+.lpc-status {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  width: fit-content;
+}
+.st-batting {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+}
+.st-out {
+  background: rgba(255, 61, 87, 0.08);
+  color: #ff3d57;
+}
+.st-yet {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.4);
+}
+.lpc-right {
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding-left: 32px;
+  min-width: 160px;
+}
+.lpc-bowl-title {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.lpc-bowl-fig {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ff3d57;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.lpc-bowl-eco {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+}
 
 /* Recent Matches */
-.recent-matches-list { display:flex;flex-direction:column;gap:11px; }
-.rm-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px 20px;transition:all 0.2s; }
-.rm-card:hover { border-color:rgba(0,212,255,0.12);transform:translateY(-1px); }
-.rm-header { display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px; }
-.rm-date   { font-size:12px;font-weight:700;color:rgba(255,255,255,0.5); }
-.rm-vs     { font-size:13px;font-weight:800;color:#fff; }
-.rm-venue  { font-size:11px;color:rgba(255,255,255,0.25); }
-.rm-result { font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;margin-left:auto; }
-.rm-won    { background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2); }
-.rm-lost   { background:rgba(255,61,87,0.08);color:#ff3d57;border:1px solid rgba(255,61,87,0.18); }
-.rm-stats  { display:flex;gap:24px;flex-wrap:wrap; }
-.rm-bat,.rm-bowl { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
-.rm-stat-lbl { font-size:8px;font-weight:800;color:rgba(255,255,255,0.25);letter-spacing:1.5px;background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px; }
-.rm-runs   { font-size:22px;font-weight:900;color:#00d4ff;line-height:1; }
-.rm-milestone { color:#ffd700 !important; }
-.rm-balls  { font-size:13px;color:rgba(255,255,255,0.3); }
-.rm-extras { font-size:11px;color:rgba(255,255,255,0.3); }
-.rm-dismissal { font-size:11px;color:#ff3d57;font-weight:600; }
-.rm-notout { font-size:11px;color:#22c55e;font-weight:700; }
-.rm-wkts   { font-size:20px;font-weight:900;color:#ff3d57;line-height:1; }
-.rm-overs  { font-size:11px;color:rgba(255,255,255,0.3); }
+.recent-matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.rm-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition: all 0.2s;
+}
+.rm-card:hover {
+  border-color: rgba(0, 212, 255, 0.12);
+  transform: translateY(-1px);
+}
+.rm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.rm-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+.rm-vs {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+.rm-venue {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+}
+.rm-result {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-left: auto;
+}
+.rm-won {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+.rm-lost {
+  background: rgba(255, 61, 87, 0.08);
+  color: #ff3d57;
+  border: 1px solid rgba(255, 61, 87, 0.18);
+}
+.rm-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.rm-bat,
+.rm-bowl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rm-stat-lbl {
+  font-size: 8px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 1.5px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.rm-runs {
+  font-size: 22px;
+  font-weight: 900;
+  color: #00d4ff;
+  line-height: 1;
+}
+.rm-milestone {
+  color: #ffd700 !important;
+}
+.rm-balls {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+}
+.rm-extras {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+.rm-dismissal {
+  font-size: 11px;
+  color: #ff3d57;
+  font-weight: 600;
+}
+.rm-notout {
+  font-size: 11px;
+  color: #22c55e;
+  font-weight: 700;
+}
+.rm-wkts {
+  font-size: 22px;
+  font-weight: 900;
+  color: #ff3d57;
+  line-height: 1;
+}
+.rm-overs {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+.rm-eco {
+  font-size: 11px;
+  color: #a855f7;
+  font-weight: 600;
+}
+
+/* Not Found */
+.not-found {
+  text-align: center;
+  padding: 120px 20px;
+}
+.not-found h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 16px 0 24px;
+}
 </style>

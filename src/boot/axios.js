@@ -1,24 +1,71 @@
+/**
+ * src/boot/axios.js
+ * ──────────────────
+ * Configures a global Axios instance with:
+ *  1. The FastAPI backend base URL
+ *  2. A REQUEST interceptor that automatically injects the JWT
+ *     "Authorization: Bearer <token>" header on every outgoing call
+ *  3. A RESPONSE interceptor that auto-logs-out on 401 Unauthorized
+ *
+ * Usage in components:
+ *   import { api } from 'boot/axios'
+ *   const { data } = await api.get('/api/my-stats')   // JWT auto-attached
+ */
+
 import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 
-// Be careful when using SSR for cross-request state pollution
-// due to creating a Singleton instance here;
-// If any client changes this (global) instance, it might be a
-// good idea to move this instance creation inside of the
-// "export default () => {}" function below (which runs individually
-// for each client)
-const api = axios.create({ baseURL: 'https://api.example.com' })
+// ── Create custom Axios instance pointing at FastAPI backend ──────
+const api = axios.create({
+  baseURL: 'http://localhost:8000',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+})
 
+// ── Boot: runs once at app startup ───────────────────────────────
 export default defineBoot(({ app }) => {
-  // for use inside Vue files (Options API) through this.$axios and this.$api
+  // ── REQUEST interceptor ─────────────────────────────────────
+  // Automatically attach JWT to every request if the user is logged in.
+  // We import the store lazily here (inside the function) to avoid
+  // circular dependency issues at module load time.
+  api.interceptors.request.use(
+    (config) => {
+      // Lazy import avoids circular import issues
+      const token = localStorage.getItem('cricket_hub_token')
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`
+      }
+      return config
+    },
+    (error) => Promise.reject(error),
+  )
 
+  // ── RESPONSE interceptor ────────────────────────────────────
+  // Auto-logout: if the server returns 401 (expired/invalid token),
+  // clear localStorage and redirect to login.
+  api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error.response?.status === 401) {
+        // Token expired — clear auth state
+        localStorage.removeItem('cricket_hub_token')
+        localStorage.removeItem('cricket_hub_user')
+        // Redirect to login page if not already there
+        const currentPath = window.location.pathname
+        if (!currentPath.includes('/login')) {
+          window.location.href = '/login'
+        }
+      }
+      return Promise.reject(error)
+    },
+  )
+
+  // Make available globally in Vue components
   app.config.globalProperties.$axios = axios
-  // ^ ^ ^ this will allow you to use this.$axios (for Vue Options API form)
-  //       so you won't necessarily have to import axios in each vue file
-
   app.config.globalProperties.$api = api
-  // ^ ^ ^ this will allow you to use this.$api (for Vue Options API form)
-  //       so you can easily perform requests against your app's API
 })
 
 export { api }

@@ -1,18 +1,51 @@
 {
   "hosting": {
-    "public": "dist/spa",
+    "public": "dist/pwa",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/api/matches", "function": "get_matches", "region": "us-central1" },
+      { "source": "/api/players", "function": "get_players", "region": "us-central1" },
+      { "source": "/api/teams", "function": "get_teams", "region": "us-central1" },
+      { "source": "/api/delivery", "function": "register_delivery", "region": "us-central1" },
+      { "source": "/api/health", "function": "health", "region": "us-central1" },
+      { "source": "**", "destination": "/index.html" }
     ],
     "headers": [
       {
+        "source": "/sw.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Service-Worker-Allowed", "value": "/" }
+        ]
+      },
+      {
+        "source": "/manifest.json",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
         "source": "**/*.@(js|css)",
-        "headers": [{ "key": "Cache-Control", "value": "max-age=31536000" }]
+        "headers": [{ "key": "Cache-Control", "value": "max-age=31536000, immutable" }]
+      },
+      {
+        "source": "**/*.@(png|jpg|jpeg|gif|svg|ico|webp|woff2)",
+        "headers": [{ "key": "Cache-Control", "value": "max-age=86400" }]
+      },
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        ]
       }
     ]
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "cricket-api",
+      "runtime": "python312",
+      "ignore": ["venv", ".git", "*.pyc", "__pycache__"]
+    }
+  ]
 }

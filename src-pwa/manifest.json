@@ -1,0 +1,77 @@
+{
+  "name": "Brisbane Handewa Cricket Hub",
+  "short_name": "GNS CRIC",
+  "description": "Live cricket scoring, player profiles, team stats & media for Brisbane Handewa Softball Cricket League 2026",
+  "start_url": "/#/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#020b1a",
+  "theme_color": "#00d4ff",
+  "categories": ["sports", "cricket", "entertainment"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Match",
+      "short_name": "LIVE",
+      "description": "View live match score",
+      "url": "/#/matches",
+      "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Players",
+      "short_name": "Players",
+      "description": "Browse all players",
+      "url": "/#/players",
+      "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Teams",
+      "short_name": "Teams",
+      "description": "Team standings",
+      "url": "/#/teams",
+      "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Brisbane Handewa Cricket Hub"
+    }
+  ],
+  "prefer_related_applications": false
+}

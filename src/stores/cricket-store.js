@@ -1,58 +1,153 @@
 import { defineStore } from 'pinia'
-import { pushToFirestore, pullFromFirestore, subscribeFirestore, firebaseConfigured } from 'src/services/firebase'
+import {
+  pushToFirestore,
+  pullFromFirestore,
+  subscribeFirestore,
+  firebaseConfigured,
+} from 'src/services/firebase'
 
 // ── Helpers ────────────────────────────────────────────────────────
 function emptyStats() {
   return {
-    matches: 0, innings: 0, runs: 0, balls: 0, notOuts: 0,
-    fours: 0, sixes: 0, highScore: 0, fifties: 0, hundreds: 0,
-    oversBowled: 0, ballsBowled: 0, runsConceded: 0, wickets: 0,
-    maidens: 0, bestFigures: '0/0',
-    catches: 0, stumpings: 0, runOuts: 0,
+    matches: 0,
+    innings: 0,
+    runs: 0,
+    balls: 0,
+    notOuts: 0,
+    fours: 0,
+    sixes: 0,
+    highScore: 0,
+    fifties: 0,
+    hundreds: 0,
+    oversBowled: 0,
+    ballsBowled: 0,
+    runsConceded: 0,
+    wickets: 0,
+    maidens: 0,
+    bestFigures: '0/0',
+    fiveWickets: 0,
+    economy: '0.00',
+    catches: 0,
+    stumpings: 0,
+    runOuts: 0,
   }
 }
 function calcAverage(runs, innings, notOuts) {
   const d = innings - notOuts
   return d > 0 ? (runs / d).toFixed(2) : runs > 0 ? '∞' : '0.00'
 }
-function calcSR(runs, balls) { return balls > 0 ? ((runs / balls) * 100).toFixed(2) : '0.00' }
-function calcEconomy(runs, balls) { return balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00' }
-function calcAvgBowl(runs, wickets) { return wickets > 0 ? (runs / wickets).toFixed(2) : '-' }
+function calcSR(runs, balls) {
+  return balls > 0 ? ((runs / balls) * 100).toFixed(2) : '0.00'
+}
+function calcEconomy(runs, balls) {
+  return balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00'
+}
+function calcAvgBowl(runs, wickets) {
+  return wickets > 0 ? (runs / wickets).toFixed(2) : '-'
+}
 
 // ── Seed data — one clean demo team ──────────────────────────────
 function seedState() {
   return {
     players: [
       {
-        id: 1, name: 'Ruwan Jayasinghe', nickname: 'The Captain',
-        role: 'Batsman', teamId: 1, number: 1, age: 30,
-        nationality: 'Sri Lankan', battingStyle: 'Right-hand bat', bowlingStyle: 'Right-arm off-spin',
+        id: 1,
+        name: 'Ruwan Jayasinghe',
+        nickname: 'The Captain',
+        role: 'Batsman',
+        teamId: 1,
+        number: 1,
+        age: 30,
+        nationality: 'Sri Lankan',
+        battingStyle: 'Right-hand bat',
+        bowlingStyle: 'Right-arm off-spin',
         description: 'Inspirational captain. Leads from the front with consistent performances.',
         achievements: ['Best Captain 2024', 'Most Runs 2023'],
-        stats: { ...emptyStats(), matches: 12, innings: 12, runs: 580, balls: 490, notOuts: 1, fours: 55, sixes: 18, highScore: 76, fifties: 4, catches: 8, wickets: 2, runsConceded: 40, ballsBowled: 36, oversBowled: 6 },
+        stats: {
+          ...emptyStats(),
+          matches: 12,
+          innings: 12,
+          runs: 580,
+          balls: 490,
+          notOuts: 1,
+          fours: 55,
+          sixes: 18,
+          highScore: 76,
+          fifties: 4,
+          catches: 8,
+          wickets: 2,
+          runsConceded: 40,
+          ballsBowled: 36,
+          oversBowled: 6,
+        },
       },
       {
-        id: 2, name: 'Nawod Sanjana', nickname: 'The Wall',
-        role: 'Batsman', teamId: 1, number: 7, age: 24,
-        nationality: 'Sri Lankan', battingStyle: 'Right-hand bat', bowlingStyle: 'Right-arm medium',
+        id: 2,
+        name: 'Nawod Sanjana',
+        nickname: 'The Wall',
+        role: 'Batsman',
+        teamId: 1,
+        number: 7,
+        age: 24,
+        nationality: 'Sri Lankan',
+        battingStyle: 'Right-hand bat',
+        bowlingStyle: 'Right-arm medium',
         description: 'Technically sound batsman known for elegant drives and solid defence.',
         achievements: ['Player of the Tournament 2024'],
-        stats: { ...emptyStats(), matches: 12, innings: 11, runs: 420, balls: 355, notOuts: 2, fours: 38, sixes: 11, highScore: 65, fifties: 3, catches: 5 },
+        stats: {
+          ...emptyStats(),
+          matches: 12,
+          innings: 11,
+          runs: 420,
+          balls: 355,
+          notOuts: 2,
+          fours: 38,
+          sixes: 11,
+          highScore: 65,
+          fifties: 3,
+          catches: 5,
+        },
       },
       {
-        id: 3, name: 'Kamal Perera', nickname: 'The Tornado',
-        role: 'Bowler', teamId: 1, number: 11, age: 26,
-        nationality: 'Sri Lankan', battingStyle: 'Right-hand bat', bowlingStyle: 'Right-arm fast-medium',
+        id: 3,
+        name: 'Kamal Perera',
+        nickname: 'The Tornado',
+        role: 'Bowler',
+        teamId: 1,
+        number: 11,
+        age: 26,
+        nationality: 'Sri Lankan',
+        battingStyle: 'Right-hand bat',
+        bowlingStyle: 'Right-arm fast-medium',
         description: 'Devastating pace bowler with ability to swing both ways.',
         achievements: ['Best Bowler 2024'],
-        stats: { ...emptyStats(), matches: 12, innings: 6, runs: 45, balls: 60, highScore: 12, wickets: 18, runsConceded: 290, oversBowled: 46, ballsBowled: 276, maidens: 3, bestFigures: '3/22', catches: 4 },
+        stats: {
+          ...emptyStats(),
+          matches: 12,
+          innings: 6,
+          runs: 45,
+          balls: 60,
+          highScore: 12,
+          wickets: 18,
+          runsConceded: 290,
+          oversBowled: 46,
+          ballsBowled: 276,
+          maidens: 3,
+          bestFigures: '3/22',
+          catches: 4,
+        },
       },
     ],
     teams: [
       {
-        id: 1, name: 'Brisbane Handewa', shortName: 'BHW',
-        color: '#00d4ff', secondaryColor: '#001a3a',
-        captainId: 1, founded: 2018, venue: 'Handewa Ground, Brisbane',
+        id: 1,
+        name: 'Brisbane Handewa',
+        shortName: 'BHW',
+        color: '#00d4ff',
+        secondaryColor: '#001a3a',
+        captainId: 1,
+        founded: 2018,
+        venue: 'Handewa Ground, Brisbane',
         description: 'The defending champions.',
         stats: { matches: 12, won: 8, lost: 3, tied: 1, points: 17, nrr: '+1.24' },
         titles: ['2024 Champions'],
@@ -64,7 +159,9 @@ function seedState() {
     nextTeamId: 2,
     nextMatchId: 1,
     notifications: [],
-    // Completed match history (full records preserved forever)
+    // Permanent commentary log (scoring events, never auto-cleared)
+    commentaryLog: [],
+    // Completed match history
     matchHistory: [],
   }
 }
@@ -80,23 +177,39 @@ export const useCricketStore = defineStore('cricket', {
   persist: {
     key: 'gns-cricket-hub-v2',
     storage: localStorage,
-    paths: ['players','teams','matches','matchHistory','nextPlayerId','nextTeamId','nextMatchId'],
+    paths: [
+      'players',
+      'teams',
+      'matches',
+      'matchHistory',
+      'commentaryLog',
+      'nextPlayerId',
+      'nextTeamId',
+      'nextMatchId',
+    ],
+    afterRestore: (ctx) => {
+      // Clear stuck toasts on reload — commentaryLog persists intentionally
+      ctx.store.notifications = []
+    },
   },
 
   // ─── GETTERS ─────────────────────────────────────────────────
   getters: {
-    getPlayerById:    (s) => (id) => s.players.find((p) => p.id === Number(id)),
-    getTeamById:      (s) => (id) => s.teams.find((t) => t.id === Number(id)),
-    getMatchById:     (s) => (id) => s.matches.find((m) => m.id === Number(id)),
-    liveMatch:        (s) => s.matches.find((m) => m.status === 'live'),
-    upcomingMatches:  (s) => s.matches.filter((m) => m.status === 'upcoming').sort((a, b) => new Date(a.date) - new Date(b.date)),
+    getPlayerById: (s) => (id) => s.players.find((p) => p.id === Number(id)),
+    getTeamById: (s) => (id) => s.teams.find((t) => t.id === Number(id)),
+    getMatchById: (s) => (id) => s.matches.find((m) => m.id === Number(id)),
+    liveMatch: (s) => s.matches.find((m) => m.status === 'live'),
+    upcomingMatches: (s) =>
+      s.matches
+        .filter((m) => m.status === 'upcoming')
+        .sort((a, b) => new Date(a.date) - new Date(b.date)),
     completedMatches: (s) => s.matches.filter((m) => m.status === 'completed'),
     getPlayersByTeam: (s) => (teamId) => s.players.filter((p) => p.teamId === Number(teamId)),
 
-    playerBattingAvg:  () => (stats) => calcAverage(stats.runs, stats.innings, stats.notOuts),
-    playerBattingSR:   () => (stats) => calcSR(stats.runs, stats.balls),
+    playerBattingAvg: () => (stats) => calcAverage(stats.runs, stats.innings, stats.notOuts),
+    playerBattingSR: () => (stats) => calcSR(stats.runs, stats.balls),
     playerBowlEconomy: () => (stats) => calcEconomy(stats.runsConceded, stats.ballsBowled),
-    playerBowlAvg:     () => (stats) => calcAvgBowl(stats.runsConceded, stats.wickets),
+    playerBowlAvg: () => (stats) => calcAvgBowl(stats.runsConceded, stats.wickets),
 
     currentBatsmen: (s) => (matchId) => {
       const m = s.matches.find((x) => x.id === matchId)
@@ -120,7 +233,7 @@ export const useCricketStore = defineStore('cricket', {
     },
     currentBowler: (s) => (matchId) => {
       const m = s.matches.find((x) => x.id === matchId)
-      return m ? (m.bowlingCard.find((b) => b.status === 'current') || null) : null
+      return m ? m.bowlingCard.find((b) => b.status === 'current') || null : null
     },
   },
 
@@ -134,26 +247,26 @@ export const useCricketStore = defineStore('cricket', {
       const cloudData = await pullFromFirestore()
       if (cloudData) {
         _isSyncingFromCloud = true
-        this.players      = cloudData.players      ?? this.players
-        this.teams        = cloudData.teams        ?? this.teams
-        this.matches      = cloudData.matches      ?? this.matches
+        this.players = cloudData.players ?? this.players
+        this.teams = cloudData.teams ?? this.teams
+        this.matches = cloudData.matches ?? this.matches
         this.matchHistory = cloudData.matchHistory ?? this.matchHistory ?? []
         this.nextPlayerId = cloudData.nextPlayerId ?? this.nextPlayerId
-        this.nextTeamId   = cloudData.nextTeamId   ?? this.nextTeamId
-        this.nextMatchId  = cloudData.nextMatchId  ?? this.nextMatchId
+        this.nextTeamId = cloudData.nextTeamId ?? this.nextTeamId
+        this.nextMatchId = cloudData.nextMatchId ?? this.nextMatchId
         _isSyncingFromCloud = false
       }
 
       // 2. Subscribe to real-time updates (other devices)
       subscribeFirestore((data) => {
         _isSyncingFromCloud = true
-        this.players      = data.players      ?? this.players
-        this.teams        = data.teams        ?? this.teams
-        this.matches      = data.matches      ?? this.matches
+        this.players = data.players ?? this.players
+        this.teams = data.teams ?? this.teams
+        this.matches = data.matches ?? this.matches
         this.matchHistory = data.matchHistory ?? this.matchHistory ?? []
         this.nextPlayerId = data.nextPlayerId ?? this.nextPlayerId
-        this.nextTeamId   = data.nextTeamId   ?? this.nextTeamId
-        this.nextMatchId  = data.nextMatchId  ?? this.nextMatchId
+        this.nextTeamId = data.nextTeamId ?? this.nextTeamId
+        this.nextMatchId = data.nextMatchId ?? this.nextMatchId
         _isSyncingFromCloud = false
       })
     },
@@ -161,26 +274,26 @@ export const useCricketStore = defineStore('cricket', {
     async _sync() {
       if (_isSyncingFromCloud) return
       await pushToFirestore({
-        players:      this.players,
-        teams:        this.teams,
-        matches:      this.matches,
+        players: this.players,
+        teams: this.teams,
+        matches: this.matches,
         matchHistory: this.matchHistory ?? [],
         nextPlayerId: this.nextPlayerId,
-        nextTeamId:   this.nextTeamId,
-        nextMatchId:  this.nextMatchId,
+        nextTeamId: this.nextTeamId,
+        nextMatchId: this.nextMatchId,
       })
     },
 
     // ─ Reset ───────────────────────────────────────────────────
     async resetToDemo() {
       const s = seedState()
-      this.players      = s.players
-      this.teams        = s.teams
-      this.matches      = s.matches
+      this.players = s.players
+      this.teams = s.teams
+      this.matches = s.matches
       this.matchHistory = []
       this.nextPlayerId = s.nextPlayerId
-      this.nextTeamId   = s.nextTeamId
-      this.nextMatchId  = s.nextMatchId
+      this.nextTeamId = s.nextTeamId
+      this.nextMatchId = s.nextMatchId
       this.notifications = []
       this.addNotification('App reset to demo data.', 'info')
       await this._sync()
@@ -195,8 +308,10 @@ export const useCricketStore = defineStore('cricket', {
       const inning = match.innings?.[0]
       // Ensure innings has legalBalls + currentOverBalls
       if (inning) {
-        if (inning.legalBalls === undefined) inning.legalBalls = Math.floor(inning.overs) * 6 + Math.round((inning.overs % 1) * 10)
-        if (inning.currentOverBalls === undefined) inning.currentOverBalls = Math.round((inning.overs % 1) * 10)
+        if (inning.legalBalls === undefined)
+          inning.legalBalls = Math.floor(inning.overs) * 6 + Math.round((inning.overs % 1) * 10)
+        if (inning.currentOverBalls === undefined)
+          inning.currentOverBalls = Math.round((inning.overs % 1) * 10)
       }
       // Ensure battingOrder entries have isStriker
       const batting = match.battingOrder.filter((b) => b.status === 'batting')
@@ -217,21 +332,23 @@ export const useCricketStore = defineStore('cricket', {
       if (!match) return
       const batting = match.battingOrder.filter((b) => b.status === 'batting')
       if (batting.length < 2) return
-      const s  = batting.find((b) => b.isStriker === true) || batting[0]
+      const s = batting.find((b) => b.isStriker === true) || batting[0]
       const ns = batting.find((b) => b.isStriker !== true) || batting[1]
-      s.isStriker  = false
+      s.isStriker = false
       ns.isStriker = true
-      this.addNotification(`Strike swapped → ${this.getPlayerById(ns.playerId)?.name} now facing`, 'info')
+      this.addNotification(
+        `Strike swapped → ${this.getPlayerById(ns.playerId)?.name} now facing`,
+        'info',
+      )
       await this._sync()
     },
-
-
 
     // ─ Team CRUD ───────────────────────────────────────────────
     async addTeam({ name, shortName, color, secondaryColor, venue, founded, description }) {
       this.teams.push({
         id: this.nextTeamId++,
-        name, shortName,
+        name,
+        shortName,
         color: color || '#00d4ff',
         secondaryColor: secondaryColor || '#001a3a',
         captainId: null,
@@ -242,13 +359,16 @@ export const useCricketStore = defineStore('cricket', {
         titles: [],
         playerIds: [],
       })
-      this.addNotification(`Team "${name}" created!`)
+      this.addNotification(`✅ Team "${name}" created!`, 'info')
       await this._sync()
     },
 
     async updateTeam(teamId, updates) {
       const team = this.teams.find((t) => t.id === teamId)
-      if (team) { Object.assign(team, updates); await this._sync() }
+      if (team) {
+        Object.assign(team, updates)
+        await this._sync()
+      }
     },
 
     async deleteTeam(teamId) {
@@ -256,19 +376,36 @@ export const useCricketStore = defineStore('cricket', {
       if (idx !== -1) {
         const name = this.teams[idx].name
         this.teams.splice(idx, 1)
-        this.players.forEach((p) => { if (p.teamId === teamId) p.teamId = null })
-        this.addNotification(`Team "${name}" deleted.`)
+        this.players.forEach((p) => {
+          if (p.teamId === teamId) p.teamId = null
+        })
+        this.addNotification(`🗑️ Team "${name}" deleted.`, 'error')
         await this._sync()
       }
     },
 
     async setCaptain(teamId, playerId) {
       const team = this.teams.find((t) => t.id === teamId)
-      if (team) { team.captainId = playerId; this.addNotification('Captain updated.'); await this._sync() }
+      if (team) {
+        team.captainId = playerId
+        this.addNotification('👑 Captain updated.', 'info')
+        await this._sync()
+      }
     },
 
     // ─ Player CRUD ─────────────────────────────────────────────
-    async addPlayer({ name, nickname, role, teamId, number, age, nationality, battingStyle, bowlingStyle, description }) {
+    async addPlayer({
+      name,
+      nickname,
+      role,
+      teamId,
+      number,
+      age,
+      nationality,
+      battingStyle,
+      bowlingStyle,
+      description,
+    }) {
       const team = this.teams.find((t) => t.id === teamId)
       if (team && team.playerIds.length >= 15) {
         this.addNotification(`"${team.name}" already has 15 players.`, 'error')
@@ -276,7 +413,8 @@ export const useCricketStore = defineStore('cricket', {
       }
       const id = this.nextPlayerId++
       this.players.push({
-        id, name,
+        id,
+        name,
         nickname: nickname || name,
         role: role || 'Batsman',
         teamId: teamId || null,
@@ -290,7 +428,7 @@ export const useCricketStore = defineStore('cricket', {
         stats: emptyStats(),
       })
       if (team) team.playerIds.push(id)
-      this.addNotification(`Player "${name}" added!`)
+      this.addNotification(`✅ Player "${name}" added to squad!`, 'info')
       await this._sync()
       return id
     },
@@ -302,7 +440,7 @@ export const useCricketStore = defineStore('cricket', {
         this.players.splice(idx, 1)
         const team = this.teams.find((t) => t.id === teamId)
         if (team) team.playerIds = team.playerIds.filter((id) => id !== playerId)
-        this.addNotification(`Player "${name}" removed.`)
+        this.addNotification(`🗑️ Player "${name}" removed from squad.`, 'error')
         await this._sync()
       }
     },
@@ -313,7 +451,11 @@ export const useCricketStore = defineStore('cricket', {
       const makeBattingOrder = (teamId) => {
         const players = this.players.filter((p) => p.teamId === Number(teamId))
         return players.map((p, i) => ({
-          playerId: p.id, runs: 0, balls: 0, fours: 0, sixes: 0,
+          playerId: p.id,
+          runs: 0,
+          balls: 0,
+          fours: 0,
+          sixes: 0,
           status: i < 2 ? 'batting' : 'yet',
           dismissal: null,
           isStriker: i === 0,
@@ -332,18 +474,20 @@ export const useCricketStore = defineStore('cricket', {
         status: 'upcoming',
         result: null,
         createdAt: Date.now(),
-        currentInning: 1,         // 1 = 1st innings, 2 = 2nd innings
+        currentInning: 1, // 1 = 1st innings, 2 = 2nd innings
         innings: [],
-        battingOrderA: makeBattingOrder(teamAId),  // Team A's batting order (persistent)
-        battingOrderB: makeBattingOrder(teamBId),  // Team B's batting order (persistent)
-        battingOrder:  makeBattingOrder(teamAId),  // active batting order (changes per inning)
+        battingOrderA: makeBattingOrder(teamAId), // Team A's batting order (persistent)
+        battingOrderB: makeBattingOrder(teamBId), // Team B's batting order (persistent)
+        battingOrder: makeBattingOrder(teamAId), // active batting order (changes per inning)
         bowlingCard: [],
         currentBowlerId: null,
         recentBalls: [],
         overTimeline: [],
       }
       this.matches.push(match)
-      this.addNotification(`Match scheduled: ${this.getTeamById(teamAId)?.name} vs ${this.getTeamById(teamBId)?.name}`)
+      this.addNotification(
+        `Match scheduled: ${this.getTeamById(teamAId)?.name} vs ${this.getTeamById(teamBId)?.name}`,
+      )
       await this._sync()
       return match.id
     },
@@ -352,7 +496,9 @@ export const useCricketStore = defineStore('cricket', {
       const match = this.matches.find((m) => m.id === matchId)
       if (!match) return
       // End any other live match
-      this.matches.forEach((m) => { if (m.status === 'live') m.status = 'completed' })
+      this.matches.forEach((m) => {
+        if (m.status === 'live') m.status = 'completed'
+      })
       match.status = 'live'
       match.currentInning = 1
 
@@ -360,7 +506,11 @@ export const useCricketStore = defineStore('cricket', {
       const makeFreshOrder = (teamId) => {
         const players = this.players.filter((p) => p.teamId === teamId)
         return players.map((p, i) => ({
-          playerId: p.id, runs: 0, balls: 0, fours: 0, sixes: 0,
+          playerId: p.id,
+          runs: 0,
+          balls: 0,
+          fours: 0,
+          sixes: 0,
           status: i < 2 ? 'batting' : 'yet',
           dismissal: null,
           isStriker: i === 0,
@@ -368,17 +518,23 @@ export const useCricketStore = defineStore('cricket', {
       }
       match.battingOrderA = makeFreshOrder(match.teamAId)
       match.battingOrderB = makeFreshOrder(match.teamBId)
-      match.battingOrder  = match.battingOrderA.map((b) => ({ ...b }))
+      match.battingOrder = match.battingOrderA.map((b) => ({ ...b }))
 
-      match.innings = [{
-        battingTeamId: match.teamAId,
-        runs: 0, wickets: 0, overs: 0,
-        legalBalls: 0, currentOverBalls: 0,
-        target: null, fallOfWickets: [],
-        inningsNum: 1,
-      }]
-      match.bowlingCard  = []
-      match.recentBalls  = []
+      match.innings = [
+        {
+          battingTeamId: match.teamAId,
+          runs: 0,
+          wickets: 0,
+          overs: 0,
+          legalBalls: 0,
+          currentOverBalls: 0,
+          target: null,
+          fallOfWickets: [],
+          inningsNum: 1,
+        },
+      ]
+      match.bowlingCard = []
+      match.recentBalls = []
       match.overTimeline = [{ over: 1, runs: 0 }]
 
       // Increment match count for players in both teams
@@ -386,10 +542,14 @@ export const useCricketStore = defineStore('cricket', {
         ...this.players.filter((p) => p.teamId === match.teamAId),
         ...this.players.filter((p) => p.teamId === match.teamBId),
       ]
-      allMatchPlayers.forEach((p) => { p.stats.matches++ })
+      allMatchPlayers.forEach((p) => {
+        p.stats.matches++
+      })
 
-
-      this.addNotification(`🔴 LIVE: ${this.getTeamById(match.teamAId)?.name} vs ${this.getTeamById(match.teamBId)?.name}`, 'live')
+      this.addNotification(
+        `🔴 LIVE: ${this.getTeamById(match.teamAId)?.name} vs ${this.getTeamById(match.teamBId)?.name}`,
+        'live',
+      )
       await this._sync()
     },
 
@@ -397,33 +557,73 @@ export const useCricketStore = defineStore('cricket', {
       const match = this.matches.find((m) => m.id === matchId)
       if (!match) return
 
-      // ── Finalise player batting stats ─────────────────────────
-      match.battingOrder.forEach((entry) => {
-        const player = this.players.find((p) => p.id === entry.playerId)
-        if (!player || entry.status === 'yet') return
+      // Snapshot 2nd innings bowling before clearing
+      if (match.currentInning === 2) {
+        match.bowlingCardInn2 = match.bowlingCard.map((b) => ({ ...b }))
+      }
 
-        if (entry.status === 'batting') {
-          // Batsman not out at end of innings — count innings + notOut
-          player.stats.innings++
-          player.stats.notOuts++
-        }
-        // Update highScore correctly using this match's innings runs
-        if (entry.runs > player.stats.highScore) {
-          player.stats.highScore = entry.runs
-        }
-      })
+      // ── Finalise ONLY status-based stats (no double-counting) ────────
+      // addDelivery already accumulates runs/balls/fours/sixes/wickets/overs live.
+      // endMatch handles only: innings count, notOuts, highScore, bestFigures.
 
-      // ── Finalise bowling stats ────────────────────────────────
-      match.bowlingCard.forEach((entry) => {
-        const player = this.players.find((p) => p.id === entry.playerId)
-        if (!player) return
-        // Update best bowling figures if this was better
-        if (entry.wickets > 0) {
-          const [bW] = player.stats.bestFigures.split('/').map(Number)
-          if (entry.wickets > bW) {
-            player.stats.bestFigures = `${entry.wickets}/${entry.runs}`
+      const finaliseStatus = (order) => {
+        order.forEach((entry) => {
+          const player = this.players.find((p) => p.id === entry.playerId)
+          if (!player || entry.status === 'yet') return
+          // Ensure innings count was incremented (may have been counted at wicket-fall)
+          // Use a 'counted' flag to prevent double-counting innings
+          if (!entry._innCounted) {
+            player.stats.innings++
+            entry._innCounted = true
           }
-        }
+          if (entry.status === 'batting') {
+            // Not out at end of innings
+            player.stats.notOuts++
+          }
+          // Keep highScore updated
+          if ((entry.runs ?? 0) > (player.stats.highScore ?? 0)) {
+            player.stats.highScore = entry.runs
+          }
+        })
+      }
+
+      // Finalise batting for Team A (1st innings)
+      if (match.battingOrderA?.length) finaliseStatus(match.battingOrderA)
+      else if (match.currentInning === 1) finaliseStatus(match.battingOrder)
+
+      // Finalise batting for Team B (2nd innings)
+      if (match.currentInning === 2) finaliseStatus(match.battingOrder)
+      else if (match.battingOrderB?.length) finaliseStatus(match.battingOrderB)
+
+      // ── Finalise bowling best figures + 5W flag ──────────────────
+      const finaliseBowling = (card) => {
+        card.forEach((entry) => {
+          const player = this.players.find((p) => p.id === entry.playerId)
+          if (!player) return
+          // 5-wicket haul tracking
+          if ((entry.wickets ?? 0) >= 5) {
+            player.stats.fiveWickets = (player.stats.fiveWickets || 0) + 1
+          }
+          // Best figures
+          if ((entry.wickets ?? 0) > 0) {
+            const [bW] = (player.stats.bestFigures || '0/0').split('/').map(Number)
+            if ((entry.wickets ?? 0) > bW) {
+              player.stats.bestFigures = `${entry.wickets}/${entry.runs}`
+            }
+          }
+        })
+      }
+      if (match.bowlingCardInn1?.length) finaliseBowling(match.bowlingCardInn1)
+      if (match.bowlingCardInn2?.length) finaliseBowling(match.bowlingCardInn2)
+      else if (!match.bowlingCardInn1?.length)
+        finaliseBowling(match.bowlingCard)
+
+        // Increment match count for all players in both teams
+      ;[
+        ...this.players.filter((p) => p.teamId === match.teamAId),
+        ...this.players.filter((p) => p.teamId === match.teamBId),
+      ].forEach((p) => {
+        p.stats.matches = (p.stats.matches || 0) + 1
       })
 
       // ── Update team stats ─────────────────────────────────────
@@ -434,29 +634,47 @@ export const useCricketStore = defineStore('cricket', {
 
       // Determine winner from result string (simple check)
       const resultLower = (result || '').toLowerCase()
-      const teamAName   = (this.getTeamById(match.teamAId)?.name || '').toLowerCase()
-      const teamBName   = (this.getTeamById(match.teamBId)?.name || '').toLowerCase()
+      const teamAName = (this.getTeamById(match.teamAId)?.name || '').toLowerCase()
+      const teamBName = (this.getTeamById(match.teamBId)?.name || '').toLowerCase()
       if (resultLower.includes(teamAName) && resultLower.includes('won')) {
-        if (teamA) { teamA.stats.won++; teamA.stats.points += 2 }
+        if (teamA) {
+          teamA.stats.won++
+          teamA.stats.points += 2
+        }
         if (teamB) teamB.stats.lost++
       } else if (resultLower.includes(teamBName) && resultLower.includes('won')) {
-        if (teamB) { teamB.stats.won++; teamB.stats.points += 2 }
+        if (teamB) {
+          teamB.stats.won++
+          teamB.stats.points += 2
+        }
         if (teamA) teamA.stats.lost++
       } else {
         // Tie
-        if (teamA) { teamA.stats.tied++; teamA.stats.points += 1 }
-        if (teamB) { teamB.stats.tied++; teamB.stats.points += 1 }
+        if (teamA) {
+          teamA.stats.tied++
+          teamA.stats.points += 1
+        }
+        if (teamB) {
+          teamB.stats.tied++
+          teamB.stats.points += 1
+        }
       }
 
       match.status = 'completed'
       match.result = result || 'Match completed'
       match.completedAt = Date.now()
 
+      // Save final 2nd innings batting order snapshot (with actual run scores)
+      if (match.currentInning === 2) {
+        match.battingOrderB = (match.battingOrder || []).map((b) => ({ ...b }))
+      }
+
       // ── Archive match to history ──────────────────────────────
       if (!this.matchHistory) this.matchHistory = []
       this.matchHistory.unshift({
         id: match.id,
-        teamAId: match.teamAId, teamBId: match.teamBId,
+        teamAId: match.teamAId,
+        teamBId: match.teamBId,
         teamAName: this.getTeamById(match.teamAId)?.name,
         teamBName: this.getTeamById(match.teamBId)?.name,
         result: match.result,
@@ -471,7 +689,6 @@ export const useCricketStore = defineStore('cricket', {
       await this._sync()
     },
 
-    // ─ Start 2nd Innings ───────────────────────────────────────
     async startInnings2(matchId) {
       const match = this.matches.find((m) => m.id === matchId)
       if (!match || match.innings.length < 1) return
@@ -489,25 +706,40 @@ export const useCricketStore = defineStore('cricket', {
         }
       })
 
+      // ── Snapshot 1st innings records before resetting ────────────
+      // Preserve bowling card (1st innings bowlers)
+      match.bowlingCardInn1 = match.bowlingCard.map((b) => ({ ...b }))
+      // Preserve batting order (1st innings batsmen — team A)
+      match.battingOrderA = match.battingOrder.map((b) => ({ ...b }))
+
       // Team B now bats — fresh batting order from battingOrderB
-      const makeFreshOrder = (players) => players.map((p, i) => ({
-        playerId: p.id, runs: 0, balls: 0, fours: 0, sixes: 0,
-        status: i < 2 ? 'batting' : 'yet',
-        dismissal: null,
-        isStriker: i === 0,
-      }))
+      const makeFreshOrder = (players) =>
+        players.map((p, i) => ({
+          playerId: p.id,
+          runs: 0,
+          balls: 0,
+          fours: 0,
+          sixes: 0,
+          status: i < 2 ? 'batting' : 'yet',
+          dismissal: null,
+          isStriker: i === 0,
+        }))
       const teamBPlayers = this.players.filter((p) => p.teamId === match.teamBId)
       match.battingOrder = makeFreshOrder(teamBPlayers)
-      match.bowlingCard  = []   // reset bowlers — Team A will now bowl
+      match.battingOrderB = match.battingOrder.map((b) => ({ ...b }))
+      match.bowlingCard = [] // reset bowlers — Team A will now bowl
       match.currentBowlerId = null
-      match.recentBalls  = []
+      match.recentBalls = []
       match.overTimeline = [{ over: 1, runs: 0 }]
       match.currentInning = 2
 
       match.innings.push({
         battingTeamId: match.teamBId,
-        runs: 0, wickets: 0, overs: 0,
-        legalBalls: 0, currentOverBalls: 0,
+        runs: 0,
+        wickets: 0,
+        overs: 0,
+        legalBalls: 0,
+        currentOverBalls: 0,
         target,
         fallOfWickets: [],
         inningsNum: 2,
@@ -516,7 +748,6 @@ export const useCricketStore = defineStore('cricket', {
       this.addNotification(`2nd Innings started! 🎯 Target: ${target} runs`, 'live')
       await this._sync()
     },
-
 
     async deleteMatch(matchId) {
       const idx = this.matches.findIndex((m) => m.id === matchId)
@@ -527,16 +758,15 @@ export const useCricketStore = defineStore('cricket', {
       }
     },
 
-
     // ─ Delivery — Cricket Engine ───────────────────────────────
     async addDelivery({
       matchId,
-      runs       = 0,    // runs off the bat
-      extras     = 0,    // extra runs (penalty/wide/noball value)
-      extraType  = null, // 'wide' | 'noball' | 'bye' | 'legbye' | null
-      wicket     = false,
-      dismissal  = '',
-      comment    = '',
+      runs = 0, // runs off the bat
+      extras = 0, // extra runs (penalty/wide/noball value)
+      extraType = null, // 'wide' | 'noball' | 'bye' | 'legbye' | null
+      wicket = false,
+      dismissal = '',
+      comment = '',
       nextBatsmanId = null,
     }) {
       const match = this.matches.find((m) => m.id === matchId)
@@ -553,19 +783,18 @@ export const useCricketStore = defineStore('cricket', {
         return
       }
 
-
       // ── 1. Determine ball type ────────────────────────────────
       // isWide   = no bat contact, no ball count, no striker runs (extra run only)
       // isNoBall = no ball count, but batsman runs DO count
       // isBye/LB = ball counts, but runs go as extras (NOT to batsman)
       // isLegal  = counts toward the over
-      const isWide   = extraType === 'wide'
+      const isWide = extraType === 'wide'
       const isNoBall = extraType === 'noball'
-      const isBye    = extraType === 'bye' || extraType === 'legbye'
-      const isLegal  = !isWide && !isNoBall   // legal = wide/noball excluded
+      const isBye = extraType === 'bye' || extraType === 'legbye'
+      const isLegal = !isWide && !isNoBall // legal = wide/noball excluded
 
       // Runs the BATSMAN gets credit for (not byes, not wide extras)
-      const batsmanRuns = (isWide || isBye) ? 0 : runs
+      const batsmanRuns = isWide || isBye ? 0 : runs
 
       // Total runs added to the score
       const totalRuns = runs + extras
@@ -573,19 +802,19 @@ export const useCricketStore = defineStore('cricket', {
 
       // ── 2. Ball label for display ─────────────────────────────
       let ballLabel
-      if (wicket && isNoBall)   ballLabel = 'NBW'
-      else if (wicket)          ballLabel = 'W'
-      else if (isWide)          ballLabel = extras > 1 ? `Wd+${extras - 1}` : 'Wd'
-      else if (isNoBall)        ballLabel = runs > 0 ? `NB+${runs}` : 'NB'
-      else if (isBye)           ballLabel = extras > 0 ? `B${extras}` : '0'
-      else                      ballLabel = String(runs)
+      if (wicket && isNoBall) ballLabel = 'NBW'
+      else if (wicket) ballLabel = 'W'
+      else if (isWide) ballLabel = extras > 1 ? `Wd+${extras - 1}` : 'Wd'
+      else if (isNoBall) ballLabel = runs > 0 ? `NB+${runs}` : 'NB'
+      else if (isBye) ballLabel = extras > 0 ? `B${extras}` : '0'
+      else ballLabel = String(runs)
 
       match.recentBalls.unshift(ballLabel)
       if (match.recentBalls.length > 36) match.recentBalls.pop()
 
       // ── 3. Identify striker and non-striker ───────────────────
       const battingNow = match.battingOrder.filter((b) => b.status === 'batting')
-      const striker    = battingNow.find((b) => b.isStriker === true) || battingNow[0]
+      const striker = battingNow.find((b) => b.isStriker === true) || battingNow[0]
 
       // ── 4. Legal ball count + over tracking ───────────────────
       let overCompleted = false
@@ -594,8 +823,8 @@ export const useCricketStore = defineStore('cricket', {
         inning.currentOverBalls = (inning.currentOverBalls || 0) + 1
 
         // Update over display (e.g. 3.4 means 3 complete overs + 4 balls)
-        const completedOvers  = Math.floor(inning.legalBalls / 6)
-        const ballsThisOver   = inning.legalBalls % 6
+        const completedOvers = Math.floor(inning.legalBalls / 6)
+        const ballsThisOver = inning.legalBalls % 6
         inning.overs = completedOvers + ballsThisOver / 10
 
         // Add to current over's run tally in timeline
@@ -620,45 +849,54 @@ export const useCricketStore = defineStore('cricket', {
         }
       }
 
-      // ── 5. Striker batting stats update ──────────────────────
+      // ── 5. Striker batting stats update (LIVE per ball) ──────────
       if (striker && !isWide && !isBye) {
         const prevRuns = striker.runs
-        striker.runs  += batsmanRuns
-        striker.balls += isLegal ? 1 : 0  // no ball doesn't add to faced count
+        striker.runs += batsmanRuns
+        striker.balls += isLegal ? 1 : 0
         if (batsmanRuns === 4) striker.fours++
         if (batsmanRuns === 6) striker.sixes++
 
-        // ── Career stats auto-save ────────────────────────────
+        // ── Career stats: update on EVERY legal ball ──────────────
         const strikerPlayer = this.players.find((p) => p.id === striker.playerId)
-        if (strikerPlayer && batsmanRuns > 0) {
-          strikerPlayer.stats.runs  += batsmanRuns
-          strikerPlayer.stats.balls += isLegal ? 1 : 0
+        if (strikerPlayer) {
+          // Always add runs (even 0 = dot ball)
+          strikerPlayer.stats.runs += batsmanRuns
+          // Always add ball faced (if legal delivery)
+          if (isLegal) strikerPlayer.stats.balls += 1
+          // Boundaries
           if (batsmanRuns === 4) strikerPlayer.stats.fours++
           if (batsmanRuns === 6) strikerPlayer.stats.sixes++
-          if (striker.runs > strikerPlayer.stats.highScore) {
+          // High score (use current innings score, not career)
+          if (striker.runs > (strikerPlayer.stats.highScore || 0)) {
             strikerPlayer.stats.highScore = striker.runs
           }
-          // Milestones
-          if (prevRuns < 50  && striker.runs >= 50)  strikerPlayer.stats.fifties++
+          // Milestones: 50 and 100
+          if (prevRuns < 50 && striker.runs >= 50) strikerPlayer.stats.fifties++
           if (prevRuns < 100 && striker.runs >= 100) {
             strikerPlayer.stats.hundreds++
             if (strikerPlayer.stats.fifties > 0) strikerPlayer.stats.fifties--
           }
-        } else if (strikerPlayer && isLegal) {
-          strikerPlayer.stats.balls += 1  // dot ball — ball still faced
         }
+      } else if (isWide && striker) {
+        // Wide — balls NOT counted for batsman but wide ball credits bowler runs
       }
 
-      // ── 6. Bowler stats update ────────────────────────────────
+      // ── 6. Bowler stats update (LIVE per ball) ────────────────────
       const bowlerEntry = match.bowlingCard.find((b) => b.status === 'current')
       if (bowlerEntry) {
         bowlerEntry.runs += totalRuns
-        if (wicket && !isWide) bowlerEntry.wickets++  // wide wickets don't credit bowler
+        if (wicket && !isWide) bowlerEntry.wickets++
         if (isLegal) {
           bowlerEntry.legalBalls = (bowlerEntry.legalBalls || 0) + 1
           const bOvers = Math.floor(bowlerEntry.legalBalls / 6)
           const bBalls = bowlerEntry.legalBalls % 6
           bowlerEntry.overs = bOvers + bBalls / 10
+          // Economy for this spell
+          bowlerEntry.economy =
+            bowlerEntry.legalBalls > 0
+              ? ((bowlerEntry.runs / bowlerEntry.legalBalls) * 6).toFixed(2)
+              : '0.00'
         }
 
         const bowlerPlayer = this.players.find((p) => p.id === bowlerEntry.playerId)
@@ -667,6 +905,11 @@ export const useCricketStore = defineStore('cricket', {
           if (isLegal) bowlerPlayer.stats.ballsBowled += 1
           bowlerPlayer.stats.oversBowled = Math.floor(bowlerPlayer.stats.ballsBowled / 6)
           if (wicket && !isWide) bowlerPlayer.stats.wickets++
+          // Live economy (career)
+          bowlerPlayer.stats.economy =
+            bowlerPlayer.stats.ballsBowled > 0
+              ? ((bowlerPlayer.stats.runsConceded / bowlerPlayer.stats.ballsBowled) * 6).toFixed(2)
+              : '0.00'
         }
       }
 
@@ -674,7 +917,7 @@ export const useCricketStore = defineStore('cricket', {
       if (wicket) {
         inning.wickets++
         if (striker) {
-          striker.status    = 'out'
+          striker.status = 'out'
           striker.dismissal = dismissal || 'Out'
           striker.isStriker = false
 
@@ -695,8 +938,8 @@ export const useCricketStore = defineStore('cricket', {
             ? match.battingOrder.find((b) => b.playerId === nextBatsmanId && b.status === 'yet')
             : match.battingOrder.find((b) => b.status === 'yet')
           if (incoming) {
-            incoming.status   = 'batting'
-            incoming.isStriker = true  // new batsman always faces first ball
+            incoming.status = 'batting'
+            incoming.isStriker = true // new batsman always faces first ball
           }
         }
       }
@@ -709,9 +952,11 @@ export const useCricketStore = defineStore('cricket', {
       // ● Legal + bat: rotate based on batsman runs
       if (!wicket) {
         let runsForRotation = 0
-        if (isWide)        runsForRotation = 0           // never rotate on wide
-        else if (isBye)    runsForRotation = extras      // rotate on bye count
-        else               runsForRotation = batsmanRuns // rotate on bat runs
+        if (isWide)
+          runsForRotation = 0 // never rotate on wide
+        else if (isBye)
+          runsForRotation = extras // rotate on bye count
+        else runsForRotation = batsmanRuns // rotate on bat runs
 
         const shouldSwapForRuns = runsForRotation % 2 === 1
 
@@ -724,10 +969,10 @@ export const useCricketStore = defineStore('cricket', {
           if (!shouldSwapForRuns || !shouldSwapForOver) {
             // Only one trigger fired → swap
             const newStriker = battingNow.find((b) => b.status === 'batting' && !b.isStriker)
-            const newNon     = battingNow.find((b) => b.status === 'batting' && b.isStriker)
+            const newNon = battingNow.find((b) => b.status === 'batting' && b.isStriker)
             if (newStriker && newNon) {
               newStriker.isStriker = true
-              newNon.isStriker     = false
+              newNon.isStriker = false
             }
           }
           // if both triggered: runs-swap + over-swap cancel each other → no change
@@ -736,35 +981,132 @@ export const useCricketStore = defineStore('cricket', {
         // Wicket on last ball of over → new batsman is already striker,
         // but they should swap for the over change
         const newBattingNow = match.battingOrder.filter((b) => b.status === 'batting')
-        const s  = newBattingNow.find((b) => b.isStriker)
+        const s = newBattingNow.find((b) => b.isStriker)
         const ns = newBattingNow.find((b) => !b.isStriker)
-        if (s && ns) { s.isStriker = false; ns.isStriker = true }
+        if (s && ns) {
+          s.isStriker = false
+          ns.isStriker = true
+        }
       }
 
-      // ── 9. Commentary notification ────────────────────────────
-      const overStr  = String(inning.overs)
+      // ── 9. Commentary log (permanent) + selective toast ───────────
+      const overStr = String(inning.overs)
       const scoreStr = `${inning.runs}/${inning.wickets} (${overStr} ov)`
-      const typeTag  = wicket ? 'wicket' : runs === 6 ? 'six' : runs === 4 ? 'four' : 'normal'
-      this.notifications.unshift({
+      const typeTag = wicket ? 'wicket' : runs === 6 ? 'six' : runs === 4 ? 'four' : 'normal'
+      const commentTxt = comment || `${ballLabel} · ${scoreStr}`
+
+      // Always add to persistent commentary log
+      if (!this.commentaryLog) this.commentaryLog = []
+      this.commentaryLog.unshift({
         id: Date.now(),
+        text: commentTxt,
         type: typeTag,
-        text: comment || `${ballLabel} · ${scoreStr}`,
         time: new Date().toLocaleTimeString(),
+        matchId,
       })
-      if (this.notifications.length > 80) this.notifications.pop()
+      if (this.commentaryLog.length > 200) this.commentaryLog.pop()
+
+      // Only toast for notable events (reduces noise)
+      if (wicket) {
+        const outPlayerName = match.battingOrder.find(
+          (b) => b.status === 'out' && b.playerId === striker?.playerId,
+        )
+          ? this.players.find((p) => p.id === striker?.playerId)?.name
+          : 'Batsman'
+        this.addNotification(
+          `🔴 WICKET! ${outPlayerName} — ${dismissal || 'Out'}. Score: ${scoreStr}`,
+          'wicket',
+        )
+      } else if (runs === 6) {
+        this.addNotification(`💥 SIX! ${scoreStr}`, 'six')
+      } else if (runs === 4) {
+        this.addNotification(`🏏 FOUR! ${scoreStr}`, 'four')
+      }
+
+      // ── 10. AUTO-DETECT innings end / match end ───────────────────
+
+      // ▶ PRIORITY 1 — Target chased (2nd innings) → instant win by wickets
+      //   Fires on EVERY delivery as soon as runs >= target (mid-over win)
+      if (match.currentInning === 2) {
+        const inn2 = inning
+        if (inn2.target && inn2.runs >= inn2.target) {
+          const team2 = this.getTeamById(inn2.battingTeamId)
+          const wicketsLeft = 10 - inn2.wickets
+          const result = `${team2?.name} won by ${wicketsLeft} wicket${wicketsLeft !== 1 ? 's' : ''}! 🏆`
+          this.addNotification(
+            `🏆 TARGET CHASED! ${result} (${inn2.runs}/${inn2.wickets} chasing ${inn2.target})`,
+            'live',
+          )
+          await this.endMatch(match.id, result)
+          await this._sync()
+          return
+        }
+
+        // ▶ PRIORITY 2 — 2nd innings ended (all out OR overs up) without hitting target
+        const matchOvers2 = match.overs || 20
+        const allOut2 = inning.wickets >= 10
+        const oversUp2 = Math.floor(inning.legalBalls / 6) >= matchOvers2
+        if (allOut2 || oversUp2) {
+          const inn1 = match.innings[0]
+          const team1 = this.getTeamById(inn1.battingTeamId)
+          const team2b = this.getTeamById(inn2.battingTeamId)
+          let result
+          if (inn2.runs < inn1.runs) {
+            const margin = inn1.runs - inn2.runs
+            result = `${team1?.name} won by ${margin} run${margin !== 1 ? 's' : ''}! 🏆`
+          } else if (inn2.runs === inn1.runs) {
+            result = `Match Tied — both teams scored ${inn1.runs}! 🤝`
+          } else {
+            const wl = 10 - inn2.wickets
+            result = `${team2b?.name} won by ${wl} wicket${wl !== 1 ? 's' : ''}! 🏆`
+          }
+          this.addNotification(
+            `🏆 MATCH OVER! ${result} ${allOut2 ? '(All Out)' : '(Overs Complete)'}`,
+            'live',
+          )
+          await this.endMatch(match.id, result)
+          await this._sync()
+          return
+        }
+      }
+
+      // ▶ PRIORITY 3 — 1st innings ended (all out OR overs up)
+      if (match.currentInning === 1) {
+        const matchOvers1 = match.overs || 20
+        const allOut1 = inning.wickets >= 10
+        const oversUp1 = Math.floor(inning.legalBalls / 6) >= matchOvers1
+        if (allOut1 || oversUp1) {
+          const team1 = this.getTeamById(inning.battingTeamId)
+          this.addNotification(
+            `🏏 1st Innings over! ${team1?.name} scored ${inning.runs}/${inning.wickets}. ${
+              allOut1 ? 'All Out!' : `${matchOvers1} overs done.`
+            } Click "Start 2nd Innings".`,
+            'live',
+          )
+        }
+      }
 
       // Sync to cloud
       await this._sync()
     },
 
-
     async setCurrentBowler(matchId, playerId) {
       const match = this.matches.find((m) => m.id === matchId)
       if (!match) return
-      match.bowlingCard.forEach((b) => { if (b.status === 'current') b.status = 'done' })
+      match.bowlingCard.forEach((b) => {
+        if (b.status === 'current') b.status = 'done'
+      })
       let entry = match.bowlingCard.find((b) => b.playerId === playerId)
       if (!entry) {
-        entry = { playerId, overs: 0, runs: 0, wickets: 0, maidens: 0, economy: 0, status: 'current' }
+        entry = {
+          playerId,
+          overs: 0,
+          runs: 0,
+          wickets: 0,
+          maidens: 0,
+          economy: 0,
+          status: 'current',
+        }
         match.bowlingCard.push(entry)
       } else {
         entry.status = 'current'
@@ -775,14 +1117,26 @@ export const useCricketStore = defineStore('cricket', {
 
     // ─ Notifications ───────────────────────────────────────────
     addNotification(text, type = 'info') {
-      const id = Date.now()
+      // Generate unique float ID
+      const id = Date.now() + Math.random()
+      // Push directly to reactive array
       this.notifications.unshift({ id, text, type, time: new Date().toLocaleTimeString() })
-      if (this.notifications.length > 80) this.notifications.pop()
-      // Auto-dismiss after 4 seconds
+      // Cap at 5 toasts — drop oldest beyond limit instantly
+      while (this.notifications.length > 5) this.notifications.pop()
+      // Auto-dismiss: wickets & live events stay 6s, others 4s
+      const delay = type === 'wicket' || type === 'live' ? 6000 : 4000
+      // Capture store proxy reference for setTimeout (Pinia keeps 'this' reactive)
+      const store = this
       setTimeout(() => {
-        const idx = this.notifications.findIndex((n) => n.id === id)
-        if (idx !== -1) this.notifications.splice(idx, 1)
-      }, 4000)
+        const idx = store.notifications.findIndex((n) => n.id === id)
+        if (idx !== -1) store.notifications.splice(idx, 1)
+      }, delay)
+    },
+
+    // Dismiss a notification immediately on click
+    dismissNotification(id) {
+      const idx = this.notifications.findIndex((n) => n.id === id)
+      if (idx !== -1) this.notifications.splice(idx, 1)
     },
   },
 })

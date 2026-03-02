@@ -6,20 +6,39 @@ import json
 import asyncio
 from datetime import datetime
 
+# ── Auth & protected routes ───────────────────────────────────────
+from api.auth import router as auth_router
+from api.user_data import router as user_data_router
+
 app = FastAPI(
     title="Brisbane Handewa Cricket Hub API",
-    description="Real-time ball-by-ball cricket scoring API for Softball Edition",
-    version="1.0.0"
+    description="Real-time ball-by-ball cricket scoring API + JWT Auth",
+    version="2.0.0"
 )
 
 # ── CORS ──────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:9000", "http://localhost:3000", "*"],
+    allow_origins=[
+        # Local development
+        "http://localhost:9000",
+        "http://localhost:9001",
+        "http://localhost:3000",
+        # Firebase Hosting domains
+        "https://brisbane-handewa-cricket-hub.web.app",
+        "https://brisbane-handewa-cricket-hub.firebaseapp.com",
+        # Allow all in dev (remove in strict production)
+        "*",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Register routers ──────────────────────────────────────────────
+app.include_router(auth_router)
+app.include_router(user_data_router)
+
 
 # ── WebSocket Connection Manager ──────────────────────────────────
 class ConnectionManager:

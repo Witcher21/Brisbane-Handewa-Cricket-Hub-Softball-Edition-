@@ -1,52 +1,85 @@
-// ══════════════════════════════════════════════════════════════
-// HOW TO SET UP YOUR FREE FIREBASE PROJECT (takes 3 minutes)
-// ══════════════════════════════════════════════════════════════
-// 1. Go to https://console.firebase.google.com
-// 2. Click "Add project" → give it a name (e.g. "cricket-hub")
-// 3. Disable Google Analytics (optional) → Create project
-// 4. Click "Web" icon (</>) → Register app → Give it a nickname
-// 5. Copy the firebaseConfig object and paste it below
-// 6. In Firebase Console: Build → Firestore Database → Create Database
-//    → Start in TEST MODE → Choose your nearest region → Done
-// 7. Your app is now live worldwide! Anyone opening the URL sees live data.
-// ══════════════════════════════════════════════════════════════
-
+/**
+ * src/services/firebase.js
+ * ────────────────────────
+ * Firebase initialization — Firestore (live data) + Authentication (users)
+ * Instagram/Facebook grade persistent auth using Firebase Auth.
+ */
 import { initializeApp } from 'firebase/app'
 import { getFirestore, doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore'
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+} from 'firebase/auth'
 
-// ▼▼▼ PASTE YOUR FIREBASE CONFIG HERE ▼▼▼
+// ── Firebase Config ───────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-}
-// ▲▲▲ PASTE YOUR FIREBASE CONFIG HERE ▲▲▲
-
-// Check if Firebase is configured
-export const firebaseConfigured = firebaseConfig.apiKey !== 'YOUR_API_KEY'
-
-let app = null
-let db  = null
-
-if (firebaseConfigured) {
-  app = initializeApp(firebaseConfig)
-  db  = getFirestore(app)
+  apiKey: 'AIzaSyDJpTeZhOAxFnVXgpxiWoTI2Lh5z6vn_bo',
+  authDomain: 'brisbane-handewa-cricket-hub.firebaseapp.com',
+  projectId: 'brisbane-handewa-cricket-hub',
+  storageBucket: 'brisbane-handewa-cricket-hub.firebasestorage.app',
+  messagingSenderId: '1089761741785',
+  appId: '1:1089761741785:web:230bffd4e049975a9ca7c8',
+  measurementId: 'G-3RTB6XWC6L',
 }
 
-export { db }
+// ── Initialize ────────────────────────────────────────────────────
+const app = initializeApp(firebaseConfig)
+export const db = getFirestore(app)
+export const auth = getAuth(app)
+export const firebaseConfigured = true
 
-// ── The single Firestore document that holds ALL app data ──
-const DATA_DOC = 'cricket-hub/app-data'
+// ── Auth Functions ────────────────────────────────────────────────
 
 /**
- * Push the full store state to Firestore.
- * Called every time the Pinia store mutates.
+ * Register a new user with username + password.
+ * Firebase uses email format. We store username as displayName.
+ * Returns the Firebase user object on success.
  */
+export async function firebaseSignUp(username, password) {
+  // Use username@cricketapp.local as internal email format
+  const email = `${username.toLowerCase()}@cricketapp.local`
+  const credential = await createUserWithEmailAndPassword(auth, email, password)
+  // Save displayName (username) on the Firebase user profile
+  await updateProfile(credential.user, { displayName: username })
+  return credential.user
+}
+
+/**
+ * Sign in an existing user with username + password.
+ * Returns the Firebase user object on success.
+ */
+export async function firebaseSignIn(username, password) {
+  const email = `${username.toLowerCase()}@cricketapp.local`
+  const credential = await signInWithEmailAndPassword(auth, email, password)
+  return credential.user
+}
+
+/**
+ * Sign out the current user.
+ */
+export async function firebaseLogout() {
+  await signOut(auth)
+}
+
+/**
+ * Listen to auth state changes (like Instagram - keeps user logged in).
+ * Calls callback(user) whenever authentication state changes.
+ * user is null when logged out, Firebase user object when logged in.
+ * Returns an unsubscribe function.
+ */
+export function onAuthChange(callback) {
+  return onAuthStateChanged(auth, callback)
+}
+
+// ── Firestore Game Data Functions ─────────────────────────────────
+const DATA_DOC = 'cricket-hub/app-data'
+
 export async function pushToFirestore(state) {
-  if (!firebaseConfigured || !db) return
+  if (!db) return
   try {
     const [col, docId] = DATA_DOC.split('/')
     await setDoc(doc(db, col, docId), {
@@ -63,12 +96,8 @@ export async function pushToFirestore(state) {
   }
 }
 
-/**
- * Pull the full state from Firestore once (on boot).
- * Returns null if not configured or no data yet.
- */
 export async function pullFromFirestore() {
-  if (!firebaseConfigured || !db) return null
+  if (!db) return null
   try {
     const [col, docId] = DATA_DOC.split('/')
     const snap = await getDoc(doc(db, col, docId))
@@ -79,13 +108,8 @@ export async function pullFromFirestore() {
   }
 }
 
-/**
- * Subscribe to real-time updates from Firestore.
- * onData(data) is called instantly whenever another device changes data.
- * Returns an unsubscribe function.
- */
 export function subscribeFirestore(onData) {
-  if (!firebaseConfigured || !db) return () => {}
+  if (!db) return () => {}
   const [col, docId] = DATA_DOC.split('/')
   return onSnapshot(doc(db, col, docId), (snap) => {
     if (snap.exists()) onData(snap.data())

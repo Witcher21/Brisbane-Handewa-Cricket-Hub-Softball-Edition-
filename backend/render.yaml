@@ -1,0 +1,15 @@
+# ── Render.com Deploy config ─────────────────────────────────────
+# This file auto-deploys the FastAPI backend to Render.com free tier
+
+services:
+  - type: web
+    name: brisbane-handewa-cricket-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --ws-ping-interval 20
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /
+    autoDeploy: true
